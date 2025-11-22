@@ -13,6 +13,8 @@ import NeighbourhoodPage from "./pages/NeighbourhoodPage";
 import BusinessDetail from "./pages/BusinessDetail";
 import SearchResults from "./pages/SearchResults";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Events from "./pages/Events";
+import EventSubmit from "./pages/EventSubmit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/neighbourhood/:slug" element={<NeighbourhoodPage />} />
           <Route path="/business/:slug" element={<BusinessDetail />} />
           <Route path="/search" element={<SearchResults />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/submit" element={<EventSubmit />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
