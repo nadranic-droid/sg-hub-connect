@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, Sparkles } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -98,53 +98,75 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 gradient-hero rounded-xl flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center gradient-mesh p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+      
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8 animate-fade-in">
+          <Link to="/" className="inline-flex items-center gap-2 mb-4 hover-lift">
+            <div className="w-14 h-14 gradient-hero rounded-2xl flex items-center justify-center shadow-glow">
               <span className="text-white font-heading font-bold text-2xl">H</span>
             </div>
-            <span className="font-heading font-bold text-3xl">Hala</span>
+            <span className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Hala</span>
           </Link>
-          <p className="text-muted-foreground">Welcome to Singapore's Business Directory</p>
+          <p className="text-muted-foreground text-lg mt-2">Welcome to Singapore's Business Directory</p>
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-primary">Join 5,000+ businesses</span>
+          </div>
         </div>
 
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle className="font-heading text-2xl">Get Started</CardTitle>
-            <CardDescription>Sign in to your account or create a new one</CardDescription>
+        <Card className="shadow-2xl border-2 border-primary/10 animate-slide-up backdrop-blur-sm bg-background/95">
+          <CardHeader className="text-center">
+            <CardTitle className="font-heading text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Get Started
+            </CardTitle>
+            <CardDescription className="text-base">Sign in to your account or create a new one</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 p-1 bg-muted/50">
+                <TabsTrigger value="signin" className="data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  Sign Up
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
+              <TabsContent value="signin" className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signin-email" className="font-medium">Email</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signin-password" className="font-medium">Password</Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signin-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading} variant="hero" size="lg">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -153,41 +175,53 @@ const Auth = () => {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+              <TabsContent value="signup" className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signup-name" className="font-medium">Full Name</Label>
+                    <div className="relative group">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signup-email" className="font-medium">Email</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
+                    <Label htmlFor="signup-password" className="font-medium">Password</Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                        required
+                        minLength={6}
+                      />
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading} variant="hero" size="lg">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -199,20 +233,20 @@ const Auth = () => {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground font-medium">Or continue with</span>
               </div>
             </div>
 
             <Button
               variant="outline"
               type="button"
-              className="w-full"
+              className="w-full h-11 border-2 hover:border-primary hover:bg-primary/5 transition-all"
               onClick={handleGoogleSignIn}
             >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -230,10 +264,23 @@ const Auth = () => {
                   fill="#EA4335"
                 />
               </svg>
-              Google
+              Continue with Google
             </Button>
+
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              <Link to="/" className="hover:text-primary transition-colors font-medium">
+                ← Back to home
+              </Link>
+            </div>
           </CardContent>
         </Card>
+
+        <p className="text-center mt-6 text-sm text-muted-foreground">
+          By continuing, you agree to our{" "}
+          <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a>
+          {" "}and{" "}
+          <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
+        </p>
       </div>
     </div>
   );

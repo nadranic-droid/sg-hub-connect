@@ -25,16 +25,23 @@ All colors MUST be HSL.
     --primary-foreground: 0 0% 100%;
     --primary-light: 174 75% 45%;
     --primary-dark: 174 90% 22%;
+    --primary-glow: 174 95% 60%;
 
     /* Secondary - Warm Coral */
     --secondary: 24 95% 53%;
     --secondary-foreground: 0 0% 100%;
     --secondary-light: 24 90% 65%;
     --secondary-dark: 24 100% 45%;
+    --secondary-glow: 24 100% 70%;
 
     /* Accent - Singapore Blue */
     --accent: 214 88% 51%;
     --accent-foreground: 0 0% 100%;
+    --accent-light: 214 85% 65%;
+
+    /* Success - Green */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
 
     /* Muted */
     --muted: 210 25% 95%;
@@ -56,12 +63,18 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(174 85% 31%) 0%, hsl(174 75% 45%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 25% 98%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(24 100% 45%) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(174 85% 31%) 0%, hsl(214 88% 51%) 50%, hsl(24 95% 53%) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(174 85% 31% / 0.1) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(214 88% 51% / 0.08) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(24 95% 53% / 0.08) 0px, transparent 50%);
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(174 85% 31% / 0.05);
     --shadow-md: 0 4px 6px -1px hsl(174 85% 31% / 0.1), 0 2px 4px -1px hsl(174 85% 31% / 0.06);
     --shadow-lg: 0 10px 15px -3px hsl(174 85% 31% / 0.1), 0 4px 6px -2px hsl(174 85% 31% / 0.05);
     --shadow-xl: 0 20px 25px -5px hsl(174 85% 31% / 0.12), 0 10px 10px -5px hsl(174 85% 31% / 0.04);
+    --shadow-glow-primary: 0 0 30px hsl(174 85% 31% / 0.3);
+    --shadow-glow-secondary: 0 0 30px hsl(24 95% 53% / 0.3);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -126,8 +139,20 @@ All colors MUST be HSL.
     background: var(--gradient-accent);
   }
 
+  .gradient-vibrant {
+    background: var(--gradient-vibrant);
+  }
+
+  .gradient-mesh {
+    background: var(--gradient-mesh);
+  }
+
   .shadow-glow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  .shadow-glow-secondary {
+    box-shadow: var(--shadow-glow-secondary);
   }
 
   .animate-fade-in {
@@ -140,6 +165,19 @@ All colors MUST be HSL.
 
   .animate-scale-in {
     animation: scaleIn 0.4s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
   }
 }
 
@@ -171,5 +209,14 @@ All colors MUST be HSL.
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
