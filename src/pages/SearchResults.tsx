@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BusinessCard } from "@/components/BusinessCard";
-import { FilterSidebar } from "@/components/FilterSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,11 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Grid, List, Search, SlidersHorizontal } from "lucide-react";
+import { Grid, List, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 const SearchResults = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -25,30 +27,37 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchInput, setSearchInput] = useState(query);
+  const [sortBy, setSortBy] = useState("relevance");
+
+  // Filter states
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedNeighbourhoods, setSelectedNeighbourhoods] = useState<string[]>([]);
+  const [minRating, setMinRating] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<string>("");
+  const [openNow, setOpenNow] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
 
-      // Search businesses
+      // Search businesses with real-time filtering
       let businessQuery = supabase
         .from("businesses")
         .select(`
           *,
-          categories!businesses_category_id_fkey (name),
-          neighbourhoods (name)
+          categories!businesses_category_id_fkey (id, name),
+          neighbourhoods (id, name)
         `)
         .eq("status", "approved");
 
+      // Apply search query
       if (query) {
         businessQuery = businessQuery.or(
-          `name.ilike.%${query}%,description.ilike.%${query}%,short_description.ilike.%${query}%`
+          `name.ilike.%${query}%,description.ilike.%${query}%,short_description.ilike.%${query}%,seo_keywords.cs.{${query}}`
         );
       }
 
-      const { data: businessData } = await businessQuery
-        .order("is_featured", { ascending: false })
-        .order("avg_rating", { ascending: false });
+      const { data: businessData } = await businessQuery;
 
       setBusinesses(businessData || []);
 
@@ -66,12 +75,184 @@ const SearchResults = () => {
     fetchData();
   }, [query]);
 
+  // Real-time client-side filtering
+  const filteredBusinesses = useMemo(() => {
+    let filtered = [...businesses];
+
+    // Filter by categories
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(b => 
+        selectedCategories.includes(b.categories?.id)
+      );
+    }
+
+    // Filter by neighbourhoods
+    if (selectedNeighbourhoods.length > 0) {
+      filtered = filtered.filter(b => 
+        selectedNeighbourhoods.includes(b.neighbourhoods?.id)
+      );
+    }
+
+    // Filter by rating
+    if (minRating > 0) {
+      filtered = filtered.filter(b => (b.avg_rating || 0) >= minRating);
+    }
+
+    // Filter by price range
+    if (priceRange) {
+      filtered = filtered.filter(b => b.price_range === priceRange);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "rating":
+        filtered.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+        break;
+      case "reviews":
+        filtered.sort((a, b) => (b.review_count || 0) - (a.review_count || 0));
+        break;
+      case "newest":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "az":
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        // Relevance: featured first, then by rating
+        filtered.sort((a, b) => {
+          if (a.is_featured && !b.is_featured) return -1;
+          if (!a.is_featured && b.is_featured) return 1;
+          return (b.avg_rating || 0) - (a.avg_rating || 0);
+        });
+    }
+
+    return filtered;
+  }, [businesses, selectedCategories, selectedNeighbourhoods, minRating, priceRange, sortBy]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchInput)}`;
-    }
+    setSearchParams({ q: searchInput });
   };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedNeighbourhoods([]);
+    setMinRating(0);
+    setPriceRange("");
+    setOpenNow(false);
+  };
+
+  const activeFiltersCount = selectedCategories.length + selectedNeighbourhoods.length + 
+    (minRating > 0 ? 1 : 0) + (priceRange ? 1 : 0);
+
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {activeFiltersCount > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">{activeFiltersCount} filters active</span>
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            Clear all
+          </Button>
+        </div>
+      )}
+
+      {/* Categories */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Categories</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {categories.map((category) => (
+            <div key={category.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cat-${category.id}`}
+                checked={selectedCategories.includes(category.id)}
+                onCheckedChange={(checked) => {
+                  setSelectedCategories(
+                    checked
+                      ? [...selectedCategories, category.id]
+                      : selectedCategories.filter((id) => id !== category.id)
+                  );
+                }}
+              />
+              <label htmlFor={`cat-${category.id}`} className="text-sm cursor-pointer">
+                {category.name}
+              </label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Neighbourhoods */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Neighbourhoods</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {neighbourhoods.slice(0, 8).map((neighbourhood) => (
+            <div key={neighbourhood.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`neigh-${neighbourhood.id}`}
+                checked={selectedNeighbourhoods.includes(neighbourhood.id)}
+                onCheckedChange={(checked) => {
+                  setSelectedNeighbourhoods(
+                    checked
+                      ? [...selectedNeighbourhoods, neighbourhood.id]
+                      : selectedNeighbourhoods.filter((id) => id !== neighbourhood.id)
+                  );
+                }}
+              />
+              <label htmlFor={`neigh-${neighbourhood.id}`} className="text-sm cursor-pointer">
+                {neighbourhood.name}
+              </label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Rating */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Minimum Rating</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[4, 3, 2, 1].map((rating) => (
+            <div key={rating} className="flex items-center space-x-2">
+              <Checkbox
+                id={`rating-${rating}`}
+                checked={minRating === rating}
+                onCheckedChange={(checked) => setMinRating(checked ? rating : 0)}
+              />
+              <label htmlFor={`rating-${rating}`} className="text-sm cursor-pointer flex items-center">
+                {rating}+ ⭐
+              </label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Price Range */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Price Range</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {["$", "$$", "$$$", "$$$$"].map((price) => (
+            <div key={price} className="flex items-center space-x-2">
+              <Checkbox
+                id={`price-${price}`}
+                checked={priceRange === price}
+                onCheckedChange={(checked) => setPriceRange(checked ? price : "")}
+              />
+              <label htmlFor={`price-${price}`} className="text-sm cursor-pointer">
+                {price}
+              </label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -95,7 +276,7 @@ const SearchResults = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search businesses..."
+                  placeholder="Search businesses, categories, keywords..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-12 h-11"
@@ -130,14 +311,56 @@ const SearchResults = () => {
               {query ? `Search Results for "${query}"` : "All Businesses"}
             </h1>
             <p className="text-muted-foreground">
-              {businesses.length} {businesses.length === 1 ? "business" : "businesses"} found
+              {filteredBusinesses.length} {filteredBusinesses.length === 1 ? "business" : "businesses"} found
             </p>
+            
+            {/* Active Filters Display */}
+            {activeFiltersCount > 0 && (
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {selectedCategories.map(catId => {
+                  const cat = categories.find(c => c.id === catId);
+                  return cat ? (
+                    <Badge key={catId} variant="secondary" className="gap-1">
+                      {cat.name}
+                      <X 
+                        className="w-3 h-3 cursor-pointer" 
+                        onClick={() => setSelectedCategories(selectedCategories.filter(id => id !== catId))}
+                      />
+                    </Badge>
+                  ) : null;
+                })}
+                {selectedNeighbourhoods.map(neighId => {
+                  const neigh = neighbourhoods.find(n => n.id === neighId);
+                  return neigh ? (
+                    <Badge key={neighId} variant="secondary" className="gap-1">
+                      {neigh.name}
+                      <X 
+                        className="w-3 h-3 cursor-pointer" 
+                        onClick={() => setSelectedNeighbourhoods(selectedNeighbourhoods.filter(id => id !== neighId))}
+                      />
+                    </Badge>
+                  ) : null;
+                })}
+                {minRating > 0 && (
+                  <Badge variant="secondary" className="gap-1">
+                    {minRating}+ ⭐
+                    <X className="w-3 h-3 cursor-pointer" onClick={() => setMinRating(0)} />
+                  </Badge>
+                )}
+                {priceRange && (
+                  <Badge variant="secondary" className="gap-1">
+                    {priceRange}
+                    <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange("")} />
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid lg:grid-cols-[280px_1fr] gap-8">
             {/* Desktop Filters */}
             <aside className="hidden lg:block">
-              <FilterSidebar categories={categories} neighbourhoods={neighbourhoods} />
+              <FilterContent />
             </aside>
 
             {/* Business Listings */}
@@ -150,11 +373,11 @@ const SearchResults = () => {
                     <SheetTrigger asChild>
                       <Button variant="outline" className="lg:hidden">
                         <SlidersHorizontal className="w-4 h-4 mr-2" />
-                        Filters
+                        Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
                       </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-80 overflow-y-auto">
-                      <FilterSidebar categories={categories} neighbourhoods={neighbourhoods} />
+                      <FilterContent />
                     </SheetContent>
                   </Sheet>
 
@@ -178,7 +401,7 @@ const SearchResults = () => {
                 </div>
 
                 {/* Sort */}
-                <Select defaultValue="relevance">
+                <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -193,7 +416,7 @@ const SearchResults = () => {
               </div>
 
               {/* Business Grid/List */}
-              {businesses.length > 0 ? (
+              {filteredBusinesses.length > 0 ? (
                 <div
                   className={
                     viewMode === "grid"
@@ -201,7 +424,7 @@ const SearchResults = () => {
                       : "flex flex-col gap-6"
                   }
                 >
-                  {businesses.map((business) => (
+                  {filteredBusinesses.map((business) => (
                     <BusinessCard
                       key={business.id}
                       id={business.id}
@@ -227,8 +450,8 @@ const SearchResults = () => {
                   <p className="text-muted-foreground mb-6">
                     Try adjusting your search or filters.
                   </p>
-                  <Button asChild variant="outline">
-                    <Link to="/">Browse All Businesses</Link>
+                  <Button onClick={clearFilters} variant="outline">
+                    Clear Filters
                   </Button>
                 </div>
               )}
