@@ -116,20 +116,20 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex gap-8">
             {categories.map((category) => (
-              <button
+              <Link
                 key={category.slug}
-                onClick={() => setActiveCategory(category.name)}
-                className={`py-4 px-2 font-medium relative transition-colors ${
+                to={`/category/${category.slug}`}
+                className={`py-4 px-2 font-medium relative transition-colors hover:text-primary ${
                   activeCategory === category.name
                     ? "text-primary font-bold"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground"
                 }`}
               >
                 {category.name}
                 {activeCategory === category.name && (
                   <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary"></div>
                 )}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -145,41 +145,42 @@ const Index = () => {
             </h2>
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
               {trendingBusinesses.map((business, index) => (
-                <Card
-                  key={business.id}
-                  className="overflow-hidden hover-lift border border-border group"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
-                      src={business.image}
-                      alt={business.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <CardContent className="p-4 space-y-3">
-                    <h3 className="font-heading font-bold text-lg group-hover:text-primary transition-colors">
-                      {business.name}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{business.rating}</span>
-                      <span>•</span>
-                      <span>{business.distance} away ({business.neighbourhood})</span>
+                <Link key={business.id} to={`/business/${business.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <Card 
+                    className="overflow-hidden hover-lift border border-border group"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={business.image}
+                        alt={business.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
                     </div>
-                    {business.certification === "MUIS" ? (
-                      <Badge className="bg-primary text-white hover:bg-primary-dark">
-                        <Shield className="w-3 h-3 mr-1" />
-                        MUIS Certified
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-accent text-accent">
-                        <span className="mr-1">☪️</span>
-                        Muslim-Owned
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="font-heading font-bold text-lg group-hover:text-primary transition-colors">
+                        {business.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{business.rating}</span>
+                        <span>•</span>
+                        <span>{business.distance} away ({business.neighbourhood})</span>
+                      </div>
+                      {business.certification === "MUIS" ? (
+                        <Badge className="bg-primary text-white hover:bg-primary-dark">
+                          <Shield className="w-3 h-3 mr-1" />
+                          MUIS Certified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-accent text-accent">
+                          <span className="mr-1">☪️</span>
+                          Muslim-Owned
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
@@ -193,14 +194,15 @@ const Index = () => {
               </h2>
               <ul className="space-y-0 border border-border rounded-lg overflow-hidden bg-white">
                 {popularDistricts.map((district, index) => (
-                  <li
+                  <Link 
                     key={district}
-                    className={`py-3 px-4 text-primary font-medium hover:bg-muted cursor-pointer transition-colors ${
+                    to={`/neighbourhood/${district.toLowerCase().replace(/\s+/g, '-')}`}
+                    className={`block py-3 px-4 text-primary font-medium hover:bg-muted cursor-pointer transition-colors ${
                       index !== popularDistricts.length - 1 ? "border-b border-border" : ""
                     }`}
                   >
                     {district}
-                  </li>
+                  </Link>
                 ))}
               </ul>
             </div>
@@ -217,11 +219,11 @@ const Index = () => {
                 <p className="text-muted-foreground text-sm">
                   Get ready for the festivities with our complete guide.
                 </p>
-                <Button 
-                  className="bg-primary text-white hover:bg-primary-dark font-semibold"
-                >
-                  Read More
-                </Button>
+                <Link to="/events">
+                  <Button className="bg-primary text-white hover:bg-primary-dark font-semibold">
+                    View Events
+                  </Button>
+                </Link>
               </Card>
             </div>
           </div>
