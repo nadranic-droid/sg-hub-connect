@@ -17,6 +17,7 @@ import {
   Calendar,
   CreditCard,
   Target,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -117,6 +118,9 @@ const AdminLayout = () => {
               </SidebarNavLink>
               <SidebarNavLink to="/admin/events" icon={<Calendar />}>
                 Events
+              </SidebarNavLink>
+              <SidebarNavLink to="/admin/articles" icon={<FileText />}>
+                Motizine (Articles)
               </SidebarNavLink>
               <SidebarNavLink to="/admin/membership" icon={<CreditCard />}>
                 Membership Plans

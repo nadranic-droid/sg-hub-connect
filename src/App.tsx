@@ -17,6 +17,7 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import MembershipPlans from "./pages/admin/MembershipPlans";
 import AdManagement from "./pages/admin/AdManagement";
 import EventsManagement from "./pages/admin/EventsManagement";
+import ArticlesManagement from "./pages/admin/ArticlesManagement";
 import Events from "./pages/Events";
 import EventSubmit from "./pages/EventSubmit";
 import ClaimBusiness from "./pages/ClaimBusiness";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="membership" element={<MembershipPlans />} />
             <Route path="ads" element={<AdManagement />} />
             <Route path="events" element={<EventsManagement />} />
+            <Route path="articles" element={<ArticlesManagement />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
