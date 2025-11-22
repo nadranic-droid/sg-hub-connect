@@ -20,24 +20,24 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 180 3% 15%;
 
-    /* Primary - Deep Teal */
-    --primary: 174 85% 31%;
+    /* Primary - Deep Emerald */
+    --primary: 164 100% 21%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 174 75% 45%;
-    --primary-dark: 174 90% 22%;
-    --primary-glow: 174 95% 60%;
+    --primary-light: 164 100% 38%;
+    --primary-dark: 164 100% 15%;
+    --primary-glow: 164 100% 50%;
 
-    /* Secondary - Warm Coral */
-    --secondary: 24 95% 53%;
+    /* Secondary - Bright Teal */
+    --secondary: 172 100% 38%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 24 90% 65%;
-    --secondary-dark: 24 100% 45%;
-    --secondary-glow: 24 100% 70%;
+    --secondary-light: 172 90% 55%;
+    --secondary-dark: 172 100% 28%;
+    --secondary-glow: 172 100% 60%;
 
-    /* Accent - Singapore Blue */
-    --accent: 214 88% 51%;
+    /* Accent - Muslim Blue */
+    --accent: 221 83% 43%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 214 85% 65%;
+    --accent-light: 221 75% 60%;
 
     /* Success - Green */
     --success: 142 76% 36%;
@@ -60,21 +60,21 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(174 85% 31%) 0%, hsl(174 75% 45%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(164 100% 21%) 0%, hsl(164 100% 28%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 25% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(24 100% 45%) 100%);
-    --gradient-vibrant: linear-gradient(135deg, hsl(174 85% 31%) 0%, hsl(214 88% 51%) 50%, hsl(24 95% 53%) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(174 85% 31% / 0.1) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(214 88% 51% / 0.08) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(24 95% 53% / 0.08) 0px, transparent 50%);
+    --gradient-accent: linear-gradient(135deg, hsl(172 100% 38%) 0%, hsl(172 100% 28%) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(164 100% 21%) 0%, hsl(172 100% 38%) 50%, hsl(221 83% 43%) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(164 100% 21% / 0.1) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(172 100% 38% / 0.08) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(221 83% 43% / 0.08) 0px, transparent 50%);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(174 85% 31% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(174 85% 31% / 0.1), 0 2px 4px -1px hsl(174 85% 31% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(174 85% 31% / 0.1), 0 4px 6px -2px hsl(174 85% 31% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(174 85% 31% / 0.12), 0 10px 10px -5px hsl(174 85% 31% / 0.04);
-    --shadow-glow-primary: 0 0 30px hsl(174 85% 31% / 0.3);
-    --shadow-glow-secondary: 0 0 30px hsl(24 95% 53% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(164 100% 21% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(164 100% 21% / 0.1), 0 2px 4px -1px hsl(164 100% 21% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(164 100% 21% / 0.1), 0 4px 6px -2px hsl(164 100% 21% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(164 100% 21% / 0.12), 0 10px 10px -5px hsl(164 100% 21% / 0.04);
+    --shadow-glow-primary: 0 0 30px hsl(164 100% 21% / 0.3);
+    --shadow-glow-secondary: 0 0 30px hsl(172 100% 38% / 0.3);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -91,13 +91,13 @@ All colors MUST be HSL.
     --popover: 180 4% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 174 75% 45%;
+    --primary: 164 100% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 90% 58%;
+    --secondary: 172 90% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 214 85% 55%;
+    --accent: 221 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     --muted: 180 4% 18%;
@@ -108,7 +108,7 @@ All colors MUST be HSL.
 
     --border: 180 4% 22%;
     --input: 180 4% 22%;
-    --ring: 174 75% 45%;
+    --ring: 164 100% 38%;
   }
 }
 
