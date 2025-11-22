@@ -5,6 +5,8 @@ import { BusinessCard } from "@/components/BusinessCard";
 import { Button } from "@/components/ui/button";
 import { User, Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
 
 const CategoryPage = () => {
   const { slug } = useParams();
@@ -57,6 +59,10 @@ const CategoryPage = () => {
   if (!category) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+        <SEO
+          title="Category Not Found"
+          description="The category you're looking for doesn't exist."
+        />
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Category Not Found</h1>
           <p className="text-muted-foreground mb-4">The category you're looking for doesn't exist.</p>
@@ -68,8 +74,30 @@ const CategoryPage = () => {
     );
   }
 
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://humblehalal.sg" },
+    { name: category.name, url: `https://humblehalal.sg/category/${category.slug}` },
+  ]);
+
+  const collectionSchema = generateCollectionPageSchema(
+    `${category.name} in Singapore`,
+    category.description || `Browse verified Halal ${category.name} businesses in Singapore`,
+    `https://humblehalal.sg/category/${category.slug}`,
+    businesses.length
+  );
+
+  const seoTitle = category.seo_title || `${category.name} - Halal Businesses in Singapore`;
+  const seoDescription = category.seo_description || 
+    `Discover ${businesses.length}+ verified Halal ${category.name} businesses across Singapore. MUIS certified and Muslim-owned establishments.`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords={[category.name, "halal", "singapore", "muis certified", "muslim owned"]}
+        schema={[breadcrumbSchema, collectionSchema]}
+      />
       {/* Header */}
       <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-4">

@@ -8,6 +8,8 @@ import { QuickCategories } from "@/components/QuickCategories";
 import { TrustSignals } from "@/components/TrustSignals";
 import { TrendingCuisines } from "@/components/TrendingCuisines";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { generateOrganizationSchema, generateWebsiteSchema } from "@/utils/seoSchemas";
 
 const categories = [
   { name: "F&B", slug: "food-beverage" },
@@ -60,8 +62,17 @@ const popularDistricts = [
 ];
 
 const Index = () => {
+  const organizationSchema = generateOrganizationSchema();
+  const websiteSchema = generateWebsiteSchema();
+
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title="Humble Halal - Discover Halal Businesses in Singapore"
+        description="Singapore's trusted guide to verified Halal businesses. Find restaurants, groceries, services and more with MUIS certification and Muslim-owned establishments."
+        keywords={["halal singapore", "halal food", "muslim businesses", "muis certified", "halal restaurants", "singapore halal"]}
+        schema={[organizationSchema, websiteSchema]}
+      />
       <Header />
       <HeroSection />
       <QuickCategories />
