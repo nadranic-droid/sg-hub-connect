@@ -1,42 +1,49 @@
 import { Link } from "react-router-dom";
+import { Shield } from "lucide-react";
+import { Facebook, Instagram, Youtube } from "lucide-react";
 
 export const Footer = () => {
   return (
-    <footer className="bg-foreground text-background py-12 mt-20 border-t border-border/10">
+    <footer className="bg-[#111111] text-[#888888] py-20 mt-20">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <div className="font-heading font-bold text-xl mb-3">Humble Halal</div>
-            <p className="text-sm opacity-80 mb-4">
-              Discover the best Halal businesses across Singapore.
-            </p>
+        <div className="grid md:grid-cols-4 gap-12 mb-16">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 text-white font-heading font-bold text-xl mb-4">
+              <Shield className="w-6 h-6" />
+              <span>Humble Halal</span>
+            </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-3">Discover</h4>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li><Link to="/category/food-beverage" className="hover:opacity-100">F&B</Link></li>
-              <li><Link to="/category/groceries" className="hover:opacity-100">Groceries</Link></li>
-              <li><Link to="/category/lifestyle" className="hover:opacity-100">Lifestyle</Link></li>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Home</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link to="/" className="hover:text-secondary transition-colors">About</Link></li>
+              <li><Link to="/" className="hover:text-secondary transition-colors">Careers</Link></li>
+              <li><Link to="/" className="hover:text-secondary transition-colors">FAQs</Link></li>
+              <li><Link to="/" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-3">Company</h4>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li><a href="#" className="hover:opacity-100">About Us</a></li>
-              <li><a href="#" className="hover:opacity-100">Contact</a></li>
-              <li><a href="#" className="hover:opacity-100">Privacy Policy</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-3">For Business</h4>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li><Link to="/auth" className="hover:opacity-100">List Your Business</Link></li>
-              <li><a href="#" className="hover:opacity-100">Claim Business</a></li>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Links</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link to="/auth" className="hover:text-secondary transition-colors">Contact Us</Link></li>
+              <li><Link to="/category/food-beverage" className="hover:text-secondary transition-colors">Verified Listings</Link></li>
+              <li><Link to="/" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
-        <div className="pt-8 border-t border-white/10 text-center text-sm opacity-70">
-          <p>© 2024 Humble Halal Business Directory. All rights reserved. Made with ❤️ in Singapore</p>
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+          <div>© Humble Halal - Discover Halal Singapore</div>
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-white hover:text-secondary transition-colors">
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a href="#" className="text-white hover:text-secondary transition-colors">
+              <Instagram className="w-5 h-5" />
+            </a>
+            <a href="#" className="text-white hover:text-secondary transition-colors">
+              <Youtube className="w-5 h-5" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
