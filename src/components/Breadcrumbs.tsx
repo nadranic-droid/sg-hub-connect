@@ -25,7 +25,7 @@ export const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to="/" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+            <Link to="/" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
               <Home className="w-4 h-4" />
               <span>Home</span>
             </Link>
@@ -42,14 +42,14 @@ export const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
               </BreadcrumbSeparator>
               <BreadcrumbItem>
                 {isLast ? (
-                  <BreadcrumbPage className="font-medium text-foreground">
+                  <BreadcrumbPage className="font-medium">
                     {item.label}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
                     <Link 
                       to={item.href || "#"} 
-                      className="hover:text-primary transition-colors"
+                      className="hover:opacity-80 transition-opacity"
                     >
                       {item.label}
                     </Link>

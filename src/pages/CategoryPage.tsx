@@ -110,7 +110,7 @@ const CategoryPage = () => {
       </header>
 
       {/* Category Hero */}
-      <section className="relative py-16 gradient-mesh overflow-hidden">
+      <section className="relative py-16 gradient-hero overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
         <div className="container mx-auto px-4 relative z-10">
           <Breadcrumbs
@@ -118,7 +118,7 @@ const CategoryPage = () => {
               { label: "Categories", href: "/#categories" },
               { label: category.name },
             ]}
-            className="mb-6 text-white/80"
+            className="mb-6 text-white/90"
           />
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -128,7 +128,7 @@ const CategoryPage = () => {
               <p className="text-lg text-white/90">{category.description}</p>
             )}
             <div className="mt-6">
-              <span className="text-white/70">
+              <span className="text-white/80 font-medium">
                 {businesses.length} businesses found
               </span>
             </div>
