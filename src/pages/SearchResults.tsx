@@ -88,7 +88,7 @@ const SearchResults = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             <Link to="/" className="text-2xl font-bold gradient-text">
-              Hala
+              Humble Halal
             </Link>
             <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
               <div className="relative">

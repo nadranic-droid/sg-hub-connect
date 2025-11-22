@@ -55,7 +55,7 @@ const Index = () => {
             <div className="w-10 h-10 gradient-hero rounded-xl flex items-center justify-center shadow-md">
               <span className="text-white font-heading font-bold text-xl">H</span>
             </div>
-            <span className="font-heading font-bold text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Hala</span>
+            <span className="font-heading font-bold text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Humble Halal</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/auth">
@@ -239,7 +239,7 @@ const Index = () => {
               <span className="text-sm font-semibold">For Business Owners</span>
             </div>
             <h2 className="font-heading font-bold text-4xl md:text-5xl leading-tight">
-              Grow Your Business with Hala
+              Grow Your Business with Humble Halal
             </h2>
             <p className="text-xl opacity-90 leading-relaxed">
               Join thousands of businesses reaching new customers across Singapore. Get started in minutes and watch your business thrive.
@@ -286,7 +286,7 @@ const Index = () => {
                 <div className="w-10 h-10 gradient-hero rounded-xl flex items-center justify-center shadow-md">
                   <span className="text-white font-heading font-bold text-xl">H</span>
                 </div>
-                <span className="font-heading font-bold text-xl">Hala</span>
+                <span className="font-heading font-bold text-xl">Humble Halal</span>
               </div>
               <p className="text-sm opacity-80 leading-relaxed mb-4">
                 Discover the best local businesses across Singapore.
@@ -332,7 +332,7 @@ const Index = () => {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-sm opacity-70">
-            <p>© 2024 Hala Business Directory. All rights reserved. Made with ❤️ in Singapore</p>
+            <p>© 2024 Humble Halal Business Directory. All rights reserved. Made with ❤️ in Singapore</p>
           </div>
         </div>
       </footer>
