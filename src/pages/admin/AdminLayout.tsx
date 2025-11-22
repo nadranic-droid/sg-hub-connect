@@ -114,7 +114,7 @@ const AdminLayout = () => {
                 Reviews
               </SidebarNavLink>
               <SidebarNavLink to="/admin/claims" icon={<FileCheck />}>
-                Claims
+                Business Claims
               </SidebarNavLink>
               <SidebarNavLink to="/admin/events" icon={<Calendar />}>
                 Events
