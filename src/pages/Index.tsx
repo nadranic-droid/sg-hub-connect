@@ -150,20 +150,21 @@ const Index = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category, index) => (
-              <Card
-                key={category.slug}
-                className="hover-lift border-2 hover:border-primary/30 cursor-pointer group animate-scale-in relative overflow-hidden bg-gradient-to-br from-background to-primary/5"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
-                <CardContent className="p-6 text-center space-y-3 relative">
-                  <div className="text-5xl mb-2 group-hover:scale-110 transition-transform">{category.icon}</div>
-                  <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-medium">{category.count} businesses</p>
-                </CardContent>
-              </Card>
+              <Link to={`/category/${category.slug}`} key={category.slug}>
+                <Card
+                  className="hover-lift border-2 hover:border-primary/30 cursor-pointer group animate-scale-in relative overflow-hidden bg-gradient-to-br from-background to-primary/5"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+                  <CardContent className="p-6 text-center space-y-3 relative">
+                    <div className="text-5xl mb-2 group-hover:scale-110 transition-transform">{category.icon}</div>
+                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground font-medium">{category.count} businesses</p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
@@ -214,9 +215,11 @@ const Index = () => {
                       {business.reviews} reviews
                     </span>
                   </div>
-                  <Button variant="outline" className="w-full group-hover:border-primary group-hover:text-primary transition-all">
-                    View Details
-                  </Button>
+                  <Link to={`/business/${business.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <Button variant="outline" className="w-full group-hover:border-primary group-hover:text-primary transition-all">
+                      View Details
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
