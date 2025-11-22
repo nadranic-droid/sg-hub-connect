@@ -173,7 +173,7 @@ const BusinessOwnerDashboard = () => {
               <div className="w-10 h-10 gradient-hero rounded-xl flex items-center justify-center shadow-md">
                 <span className="text-white font-heading font-bold text-xl">H</span>
               </div>
-              <span className="font-heading font-bold text-2xl">Hala</span>
+              <span className="font-heading font-bold text-2xl">Humble Halal</span>
             </Link>
             <div className="flex items-center gap-3">
               <Button onClick={() => navigate("/business/submit")} variant="hero" className="gap-2">

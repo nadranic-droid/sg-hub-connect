@@ -66,7 +66,7 @@ const Dashboard = () => {
               <div className="w-10 h-10 gradient-hero rounded-xl flex items-center justify-center shadow-md">
                 <span className="text-white font-heading font-bold text-xl">H</span>
               </div>
-              <span className="font-heading font-bold text-2xl">Hala</span>
+              <span className="font-heading font-bold text-2xl">Humble Halal</span>
             </Link>
             <Button variant="ghost" onClick={handleSignOut} className="gap-2">
               <LogOut className="w-4 h-4" />
@@ -198,7 +198,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <Button variant="hero" size="xl" className="w-full gap-2 shadow-glow">
+              <Button variant="hero" size="xl" className="w-full gap-2 shadow-glow" onClick={() => navigate("/business/submit")}>
                 <Plus className="w-5 h-5" />
                 Add Your First Business
               </Button>

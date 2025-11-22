@@ -95,7 +95,7 @@ const CategoryPage = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="text-2xl font-bold gradient-text">
-              Hala
+              Humble Halal
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="ghost" asChild>

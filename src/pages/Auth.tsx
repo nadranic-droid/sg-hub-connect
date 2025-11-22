@@ -109,7 +109,7 @@ const Auth = () => {
             <div className="w-14 h-14 gradient-hero rounded-2xl flex items-center justify-center shadow-glow">
               <span className="text-white font-heading font-bold text-2xl">H</span>
             </div>
-            <span className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Hala</span>
+            <span className="font-heading font-bold text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Humble Halal</span>
           </Link>
           <p className="text-muted-foreground text-lg mt-2">Welcome to Singapore's Business Directory</p>
           <div className="flex items-center justify-center gap-2 mt-3">

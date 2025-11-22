@@ -197,7 +197,7 @@ const BusinessSubmission = () => {
             <div className="w-10 h-10 gradient-hero rounded-xl flex items-center justify-center shadow-md">
               <span className="text-white font-heading font-bold text-xl">H</span>
             </div>
-            <span className="font-heading font-bold text-2xl">Hala</span>
+            <span className="font-heading font-bold text-2xl">Humble Halal</span>
           </Link>
         </div>
       </header>
@@ -580,7 +580,7 @@ const BusinessSubmission = () => {
                         {formData.seo_title || formData.name || "Your Business Name"}
                       </p>
                       <p className="text-xs text-success">
-                        hala.sg › business › {formData.name.toLowerCase().replace(/\s+/g, "-")}
+                        humblehalal.sg › business › {formData.name.toLowerCase().replace(/\s+/g, "-")}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {formData.seo_description || formData.short_description || "Your business description will appear here..."}
