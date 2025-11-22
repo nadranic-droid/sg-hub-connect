@@ -18,6 +18,8 @@ import MembershipPlans from "./pages/admin/MembershipPlans";
 import AdManagement from "./pages/admin/AdManagement";
 import EventsManagement from "./pages/admin/EventsManagement";
 import ArticlesManagement from "./pages/admin/ArticlesManagement";
+import ArticleEditor from "./pages/admin/ArticleEditor";
+import ClaimsManagement from "./pages/admin/ClaimsManagement";
 import Events from "./pages/Events";
 import EventSubmit from "./pages/EventSubmit";
 import ClaimBusiness from "./pages/ClaimBusiness";
@@ -49,7 +51,10 @@ const App = () => (
             <Route path="membership" element={<MembershipPlans />} />
             <Route path="ads" element={<AdManagement />} />
             <Route path="events" element={<EventsManagement />} />
-            <Route path="articles" element={<ArticlesManagement />} />
+              <Route path="articles" element={<ArticlesManagement />} />
+              <Route path="articles/new" element={<ArticleEditor />} />
+              <Route path="articles/:id" element={<ArticleEditor />} />
+              <Route path="claims" element={<ClaimsManagement />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

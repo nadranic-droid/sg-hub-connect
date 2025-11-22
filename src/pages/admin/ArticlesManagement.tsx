@@ -42,7 +42,7 @@ const ArticlesManagement = () => {
             Manage articles, guides, and editorial content
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => window.location.href = '/admin/articles/new'}>
           <Plus className="w-4 h-4" />
           New Article
         </Button>
@@ -89,7 +89,11 @@ const ArticlesManagement = () => {
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => window.location.href = `/admin/articles/${article.id}`}
+                      >
                         Edit
                       </Button>
                     </TableCell>
