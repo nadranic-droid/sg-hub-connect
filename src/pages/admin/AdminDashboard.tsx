@@ -23,7 +23,10 @@ import {
   MoreVertical,
   Check,
   X,
-  Eye
+  Eye,
+  Calendar,
+  CreditCard,
+  Target
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -206,6 +209,15 @@ const AdminDashboard = () => {
               </SidebarNavLink>
               <SidebarNavLink to="/admin/claims" icon={<FileCheck />}>
                 Claims
+              </SidebarNavLink>
+              <SidebarNavLink to="/admin/events" icon={<Calendar />}>
+                Events
+              </SidebarNavLink>
+              <SidebarNavLink to="/admin/membership" icon={<CreditCard />}>
+                Membership Plans
+              </SidebarNavLink>
+              <SidebarNavLink to="/admin/ads" icon={<Target />}>
+                Ad Slots
               </SidebarNavLink>
               <SidebarNavLink to="/admin/analytics" icon={<BarChart3 />}>
                 Analytics

@@ -296,6 +296,22 @@ const BusinessDetail = () => {
                     </div>
                   </>
                 )}
+
+                {!business.is_claimed && (
+                  <>
+                    <hr className="border-border" />
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Is this your business?
+                      </p>
+                      <Link to={`/claim-business?business=${business.id}`}>
+                        <Button variant="secondary" className="w-full">
+                          Claim This Business
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
