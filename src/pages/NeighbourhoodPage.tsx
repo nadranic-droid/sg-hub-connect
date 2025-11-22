@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { BusinessCard } from "@/components/BusinessCard";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { Button } from "@/components/ui/button";
-import { User, Search, MapPin } from "lucide-react";
+import { User, Search, MapPin, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
 
 const NeighbourhoodPage = () => {
   const { slug } = useParams();
@@ -58,6 +60,10 @@ const NeighbourhoodPage = () => {
   if (!neighbourhood) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+        <SEO
+          title="Neighbourhood Not Found"
+          description="The neighbourhood you're looking for doesn't exist."
+        />
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Neighbourhood Not Found</h1>
           <p className="text-muted-foreground mb-4">
@@ -80,8 +86,31 @@ const NeighbourhoodPage = () => {
       longitude: parseFloat(b.longitude),
     }));
 
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://humblehalal.sg" },
+    { name: "Neighbourhoods", url: "https://humblehalal.sg/#neighbourhoods" },
+    { name: neighbourhood.name, url: `https://humblehalal.sg/neighbourhood/${neighbourhood.slug}` },
+  ]);
+
+  const collectionSchema = generateCollectionPageSchema(
+    `Halal Businesses in ${neighbourhood.name}`,
+    neighbourhood.description || `Discover Halal businesses in ${neighbourhood.name}, Singapore`,
+    `https://humblehalal.sg/neighbourhood/${neighbourhood.slug}`,
+    businesses.length
+  );
+
+  const seoTitle = neighbourhood.seo_title || `Halal Businesses in ${neighbourhood.name} - ${neighbourhood.region} Singapore`;
+  const seoDescription = neighbourhood.seo_description || 
+    `Find ${businesses.length}+ verified Halal businesses in ${neighbourhood.name}, ${neighbourhood.region}. MUIS-certified restaurants and Muslim-owned services.`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords={[neighbourhood.name, neighbourhood.region, "halal", "singapore", "muslim businesses"]}
+        schema={[breadcrumbSchema, collectionSchema]}
+      />
       {/* Header */}
       <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-4">
@@ -132,11 +161,19 @@ const NeighbourhoodPage = () => {
             <MapPin className="w-5 h-5" />
             <span>{neighbourhood.region}</span>
           </div>
-          <h1 className="font-heading font-extrabold text-4xl mb-2">{neighbourhood.name}</h1>
+          <h1 className="font-heading font-extrabold text-4xl mb-4">{neighbourhood.name}</h1>
+          
+          {/* Rich Description */}
           {neighbourhood.description && (
-            <p className="text-muted-foreground text-lg">{neighbourhood.description}</p>
+            <div className="bg-white border border-border rounded-xl p-6 mb-6">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
+                <p className="text-foreground text-base leading-relaxed">{neighbourhood.description}</p>
+              </div>
+            </div>
           )}
-          <p className="mt-4 text-sm font-medium text-muted-foreground">
+          
+          <p className="text-sm font-medium text-muted-foreground">
             {businesses.length} businesses in this area
           </p>
         </div>

@@ -1,14 +1,17 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /business-dashboard
+Disallow: /auth
+
+# Allow search engines to crawl public pages
 Allow: /
+Allow: /category/*
+Allow: /neighbourhood/*
+Allow: /business/*
+Allow: /search
+Allow: /articles/*
+Allow: /events
+
+# Sitemap location
+Sitemap: https://humblehalal.sg/sitemap.xml

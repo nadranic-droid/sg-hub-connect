@@ -13,6 +13,8 @@ import CategoryPage from "./pages/CategoryPage";
 import NeighbourhoodPage from "./pages/NeighbourhoodPage";
 import BusinessDetail from "./pages/BusinessDetail";
 import SearchResults from "./pages/SearchResults";
+import Articles from "./pages/Articles";
+import ArticleDetail from "./pages/ArticleDetail";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import MembershipPlans from "./pages/admin/MembershipPlans";
@@ -45,6 +47,8 @@ const App = () => (
             <Route path="/neighbourhood/:slug" element={<NeighbourhoodPage />} />
             <Route path="/business/:slug" element={<BusinessDetail />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/articles" element={<Articles />} />
+            <Route path="/articles/:slug" element={<ArticleDetail />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/submit" element={<EventSubmit />} />
             <Route path="/claim-business" element={<ClaimBusiness />} />

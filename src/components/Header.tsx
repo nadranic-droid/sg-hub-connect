@@ -32,11 +32,11 @@ export const Header = () => {
             <Link to="/category/food-beverage" className="text-muted-foreground hover:text-primary font-medium transition-colors">
               Restaurant
             </Link>
-            <Link to="/admin/membership-plans" className="text-muted-foreground hover:text-primary font-medium transition-colors">
-              Pricing
+            <Link to="/articles" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+              Blog
             </Link>
             <Link to="/events" className="text-muted-foreground hover:text-primary font-medium transition-colors">
-              Resources
+              Events
             </Link>
             <Link to="/auth" className="text-muted-foreground hover:text-primary font-medium transition-colors">
               Contact
