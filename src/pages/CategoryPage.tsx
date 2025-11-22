@@ -109,6 +109,11 @@ const CategoryPage = () => {
       {/* Category Header */}
       <section className="bg-muted/50 border-b border-border py-8">
         <div className="container mx-auto px-4">
+          <nav className="text-sm text-muted-foreground mb-4">
+            <Link to="/" className="hover:text-foreground">Home</Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground font-medium">{category.name}</span>
+          </nav>
           <h1 className="font-heading font-extrabold text-4xl mb-2">{category.name}</h1>
           {category.description && (
             <p className="text-muted-foreground text-lg">{category.description}</p>

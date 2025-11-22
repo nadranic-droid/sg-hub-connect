@@ -123,6 +123,17 @@ const BusinessDetail = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-10">
+        {/* Breadcrumbs */}
+        <nav className="text-sm text-muted-foreground mb-6">
+          <Link to="/" className="hover:text-foreground">Home</Link>
+          <span className="mx-2">/</span>
+          <Link to={`/category/${business.categories?.slug}`} className="hover:text-foreground">
+            {business.categories?.name}
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-foreground font-medium">{business.name}</span>
+        </nav>
+
         <div className="grid lg:grid-cols-[2fr,1fr] gap-8">
           {/* Left Column */}
           <div className="space-y-6">
