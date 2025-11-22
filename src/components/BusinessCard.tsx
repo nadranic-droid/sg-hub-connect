@@ -1,15 +1,13 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Star, MapPin, Phone, Globe, Heart, Verified } from "lucide-react";
-import { useState } from "react";
+import { Star, Shield } from "lucide-react";
 
 interface BusinessCardProps {
   id: string;
   name: string;
   slug: string;
-  category: string;
+  category?: string;
   neighbourhood: string;
   shortDescription?: string;
   rating?: number;
@@ -20,130 +18,63 @@ interface BusinessCardProps {
   isFeatured?: boolean;
   phone?: string;
   website?: string;
+  distance?: string;
+  certification?: "MUIS" | "Muslim-Owned" | null;
 }
 
 export const BusinessCard = ({
-  id,
   name,
   slug,
-  category,
   neighbourhood,
-  shortDescription,
   rating = 0,
-  reviewCount = 0,
-  priceRange,
   image,
-  isVerified,
-  isFeatured,
-  phone,
-  website,
+  distance = "0.5km",
+  certification,
 }: BusinessCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-
   return (
-    <Card className="group overflow-hidden hover-lift border-2 border-border/50 hover:border-primary/50 transition-all duration-300">
-      <div className="relative h-48 overflow-hidden bg-muted">
-        {image ? (
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full gradient-mesh flex items-center justify-center">
-            <span className="text-4xl font-bold text-white/30">{name.charAt(0)}</span>
+    <Link to={`/business/${slug}`}>
+      <Card className="overflow-hidden hover-lift border border-border group">
+        <div className="aspect-[4/3] overflow-hidden">
+          {image ? (
+            <img
+              src={image}
+              alt={name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-4xl font-bold text-muted-foreground/30">
+                {name.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <CardContent className="p-4 space-y-3">
+          <h3 className="font-heading font-bold text-lg group-hover:text-primary transition-colors line-clamp-1">
+            {name}
+          </h3>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span className="font-medium text-foreground">{rating}</span>
+            <span>•</span>
+            <span>{distance} away ({neighbourhood})</span>
           </div>
-        )}
-        {isFeatured && (
-          <Badge className="absolute top-3 left-3 bg-secondary text-secondary-foreground shadow-glow-secondary">
-            Featured
-          </Badge>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`absolute top-3 right-3 bg-background/80 backdrop-blur-sm hover:bg-background ${
-            isFavorite ? "text-destructive" : "text-muted-foreground"
-          }`}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsFavorite(!isFavorite);
-          }}
-        >
-          <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
-        </Button>
-      </div>
-      
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <Link to={`/business/${slug}`} className="flex-1">
-            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-1">
-              {name}
-              {isVerified && (
-                <Verified className="inline-block w-4 h-4 ml-1.5 text-primary fill-primary" />
-              )}
-            </h3>
-          </Link>
-        </div>
 
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="secondary" className="text-xs">
-            {category}
-          </Badge>
-          {priceRange && (
-            <span className="text-sm text-muted-foreground">{priceRange}</span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 mb-3">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-4 h-4 ${
-                  i < Math.floor(rating)
-                    ? "fill-secondary text-secondary"
-                    : "text-muted-foreground/30"
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-muted-foreground ml-1">
-            {rating.toFixed(1)} ({reviewCount} reviews)
-          </span>
-        </div>
-
-        {shortDescription && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            {shortDescription}
-          </p>
-        )}
-
-        <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
-          <MapPin className="w-4 h-4" />
-          <span className="line-clamp-1">{neighbourhood}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button asChild size="sm" className="flex-1">
-            <Link to={`/business/${slug}`}>View Details</Link>
-          </Button>
-          {phone && (
-            <Button variant="outline" size="icon" asChild>
-              <a href={`tel:${phone}`}>
-                <Phone className="w-4 h-4" />
-              </a>
-            </Button>
-          )}
-          {website && (
-            <Button variant="outline" size="icon" asChild>
-              <a href={website} target="_blank" rel="noopener noreferrer">
-                <Globe className="w-4 h-4" />
-              </a>
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          {certification === "MUIS" ? (
+            <Badge className="bg-primary text-white hover:bg-primary-dark">
+              <Shield className="w-3 h-3 mr-1" />
+              MUIS Certified
+            </Badge>
+          ) : certification === "Muslim-Owned" ? (
+            <Badge variant="outline" className="border-accent text-accent">
+              <span className="mr-1">☪️</span>
+              Muslim-Owned
+            </Badge>
+          ) : null}
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
