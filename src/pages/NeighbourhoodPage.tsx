@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { BusinessCard } from "@/components/BusinessCard";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { Button } from "@/components/ui/button";
-import { User, Search, MapPin, Info } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { MapPin, Info } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
 
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { LinkMesh } from "@/components/LinkMesh";
 import { NeighbourhoodFAQ } from "@/components/NeighbourhoodFAQ";
 
@@ -21,33 +21,51 @@ const NeighbourhoodPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!slug) return;
+      
       setLoading(true);
 
-      const { data: neighbourhoodData } = await supabase
-        .from("neighbourhoods")
-        .select("*")
-        .eq("slug", slug)
-        .maybeSingle();
+      try {
+        const { data: neighbourhoodData, error: hoodError } = await supabase
+          .from("neighbourhoods")
+          .select("*")
+          .eq("slug", slug)
+          .maybeSingle();
 
-      setNeighbourhood(neighbourhoodData);
+        if (hoodError) {
+          console.error("Error fetching neighbourhood:", hoodError);
+          setLoading(false);
+          return;
+        }
 
-      if (neighbourhoodData) {
-        const { data: businessData } = await supabase
-          .from("businesses")
-          .select(`
-            *,
-            categories!businesses_category_id_fkey (name),
-            neighbourhoods (name)
-          `)
-          .eq("neighbourhood_id", neighbourhoodData.id)
-          .eq("status", "approved")
-          .order("is_featured", { ascending: false })
-          .order("avg_rating", { ascending: false });
+        setNeighbourhood(neighbourhoodData);
 
-        setBusinesses(businessData || []);
+        if (neighbourhoodData) {
+          const { data: businessData, error: businessError } = await supabase
+            .from("businesses")
+            .select(`
+              *,
+              categories!businesses_category_id_fkey (name),
+              neighbourhoods (name)
+            `)
+            .eq("neighbourhood_id", neighbourhoodData.id)
+            .eq("status", "approved")
+            .order("is_featured", { ascending: false })
+            .order("avg_rating", { ascending: false })
+            .order("review_count", { ascending: false })
+            .limit(100); // Limit for performance
+
+          if (businessError) {
+            console.error("Error fetching businesses:", businessError);
+          }
+
+          setBusinesses(businessData || []);
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchData();
@@ -83,14 +101,15 @@ const NeighbourhoodPage = () => {
 
   const businessMarkers = businesses
     .filter((b) => b.latitude && b.longitude)
+    .slice(0, 50) // Limit markers for performance
     .map((b) => ({
       id: b.id,
       name: b.name,
       slug: b.slug,
       address: b.address,
       phone: b.phone,
-      latitude: parseFloat(b.latitude),
-      longitude: parseFloat(b.longitude),
+      latitude: parseFloat(String(b.latitude)),
+      longitude: parseFloat(String(b.longitude)),
     }));
 
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -106,53 +125,29 @@ const NeighbourhoodPage = () => {
     businesses.length
   );
 
-  const seoTitle = neighbourhood.seo_title || `Top Halal Food & Services in ${neighbourhood.name} (${new Date().getFullYear()}) | Humble Halal`;
+  const currentYear = new Date().getFullYear();
+  const seoTitle = neighbourhood.seo_title || `Halal Businesses in ${neighbourhood.name}, ${neighbourhood.region} (${currentYear}) | Humble Halal Singapore`;
   const seoDescription = neighbourhood.seo_description || 
-    `Explore the best Halal food and services in ${neighbourhood.name}, ${neighbourhood.region}. We found ${businesses.length}+ verified spots including restaurants, cafes and mosques near ${neighbourhood.name}.`;
+    `Discover ${businesses.length}+ verified Halal businesses in ${neighbourhood.name}, ${neighbourhood.region}, Singapore. Find MUIS certified restaurants, cafes, and services near ${neighbourhood.name}. Read reviews, check locations, and support Muslim-owned businesses.`;
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
         title={seoTitle}
         description={seoDescription}
-        keywords={[neighbourhood.name, neighbourhood.region, "halal", "singapore", "muslim businesses"]}
+        keywords={[
+          `halal ${neighbourhood.name}`,
+          `${neighbourhood.name} halal restaurants`,
+          `${neighbourhood.name} halal cafes`,
+          `${neighbourhood.region} halal`,
+          "muis certified singapore",
+          "muslim owned businesses singapore",
+          `halal food ${neighbourhood.name}`,
+          `halal services ${neighbourhood.name}`
+        ]}
         schema={[breadcrumbSchema, collectionSchema] as any}
       />
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <div className="font-heading font-bold text-xl leading-tight">
-                Humble Halal
-                <div className="text-xs font-normal opacity-90">Singapore Business Directory</div>
-              </div>
-            </Link>
-
-            <div className="flex-1 max-w-2xl mx-8 relative">
-              <Input
-                placeholder="Search for food, services, or areas in Singapore..."
-                className="w-full h-11 pl-4 pr-12 bg-white text-foreground border-0"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4" />
-                <span className="hidden md:inline">Singapore, {neighbourhood.region}</span>
-              </div>
-              <Link to="/auth">
-                <button className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <User className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Neighbourhood Header */}
       <section className="bg-muted/50 border-b border-border py-8">
@@ -219,8 +214,8 @@ const NeighbourhoodPage = () => {
                 Location Map
               </h2>
               <NeighbourhoodMap
-                latitude={neighbourhood.latitude ? parseFloat(neighbourhood.latitude) : undefined}
-                longitude={neighbourhood.longitude ? parseFloat(neighbourhood.longitude) : undefined}
+                latitude={neighbourhood.latitude ? parseFloat(String(neighbourhood.latitude)) : undefined}
+                longitude={neighbourhood.longitude ? parseFloat(String(neighbourhood.longitude)) : undefined}
                 businesses={businessMarkers}
               />
             </div>
@@ -281,6 +276,7 @@ const NeighbourhoodPage = () => {
       )}
       
       <LinkMesh currentSlug={slug} type="neighbourhood" />
+      <Footer />
     </div>
   );
 };
