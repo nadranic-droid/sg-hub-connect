@@ -46,35 +46,22 @@ const EventSubmit = () => {
         // Upload Image
         if (imageFile) {
             const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            
-            // Try to upload to event-images bucket, fallback to public bucket if it doesn't exist
-            let bucketName = 'event-images';
-            const { error: uploadError, data: uploadData } = await supabase.storage
+            const fileName = `${crypto.randomUUID()}.${fileExt}`;
+            const bucketName = 'event-images';
+
+            const { error: uploadError } = await supabase.storage
                 .from(bucketName)
                 .upload(fileName, imageFile);
 
             if (uploadError) {
-                // If bucket doesn't exist, try public bucket or create a data URL
-                if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
-                    console.warn('event-images bucket not found, using data URL instead');
-                    // Convert to base64 data URL as fallback
-                    const reader = new FileReader();
-                    imageUrl = await new Promise((resolve) => {
-                        reader.onloadend = () => resolve(reader.result as string);
-                        reader.readAsDataURL(imageFile);
-                    });
-                } else {
-                    throw uploadError;
-                }
-            } else {
-                // Get Public URL (Assuming bucket is public)
-                const { data: { publicUrl } } = supabase.storage
-                    .from(bucketName)
-                    .getPublicUrl(fileName);
-                    
-                imageUrl = publicUrl;
+                throw new Error(`Failed to upload image: ${uploadError.message}`);
             }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from(bucketName)
+                .getPublicUrl(fileName);
+                
+            imageUrl = publicUrl;
         }
 
         // Insert Event
