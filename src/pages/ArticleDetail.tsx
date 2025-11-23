@@ -10,9 +10,25 @@ import { SEO } from "@/components/SEO";
 import { generateArticleSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 import { toast } from "sonner";
 
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  cover_image?: string;
+  author_id?: string;
+  published_at?: string;
+  created_at?: string;
+  views_count?: number;
+  category?: string;
+  tags?: string[];
+  is_published?: boolean;
+}
+
 const ArticleDetail = () => {
   const { slug } = useParams();
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

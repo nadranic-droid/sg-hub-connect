@@ -3,10 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessCard } from "@/components/BusinessCard";
 import { Button } from "@/components/ui/button";
-import { User, Search, MapPin } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { LinkMesh } from "@/components/LinkMesh";
 
 const CategoryPage = () => {
   const { slug } = useParams();
@@ -86,9 +87,9 @@ const CategoryPage = () => {
     businesses.length
   );
 
-  const seoTitle = category.seo_title || `${category.name} - Halal Businesses in Singapore`;
+  const seoTitle = category.seo_title || `Best Halal ${category.name} in Singapore (${new Date().getFullYear()}) | Humble Halal`;
   const seoDescription = category.seo_description || 
-    `Discover ${businesses.length}+ verified Halal ${category.name} businesses across Singapore. MUIS certified and Muslim-owned establishments.`;
+    `Looking for Halal ${category.name} in Singapore? Browse ${businesses.length}+ verified MUIS certified and Muslim-owned ${category.name} spots. Read reviews, check menus and find locations near you.`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,41 +99,7 @@ const CategoryPage = () => {
         keywords={[category.name, "halal", "singapore", "muis certified", "muslim owned"]}
         schema={[breadcrumbSchema, collectionSchema]}
       />
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <div className="font-heading font-bold text-xl leading-tight">
-                Humble Halal
-                <div className="text-xs font-normal opacity-90">Singapore Business Directory</div>
-              </div>
-            </Link>
-
-            <div className="flex-1 max-w-2xl mx-8 relative">
-              <Input
-                placeholder="Search for food, services, or areas in Singapore..."
-                className="w-full h-11 pl-4 pr-12 bg-white text-foreground border-0"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4" />
-                <span className="hidden md:inline">Singapore, Near Bugis</span>
-              </div>
-              <Link to="/auth">
-                <button className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <User className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Category Header */}
       <section className="bg-muted/50 border-b border-border py-8">
@@ -189,6 +156,10 @@ const CategoryPage = () => {
           </div>
         )}
       </main>
+      
+      <LinkMesh currentSlug={slug} type="category" />
+      
+      <Footer />
     </div>
   );
 };

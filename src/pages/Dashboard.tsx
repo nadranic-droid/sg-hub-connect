@@ -1,17 +1,52 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Building2, Star, Heart, MessageSquare, Plus, TrendingUp, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  LogOut, 
+  Building2, 
+  Star, 
+  Heart, 
+  MessageSquare, 
+  Plus, 
+  TrendingUp, 
+  Eye,
+  Sparkles,
+  Badge as BadgeIcon,
+  Settings,
+  Bell,
+  User,
+  CreditCard,
+  BarChart3,
+  Zap,
+  CheckCircle2,
+  Clock,
+  Mail,
+  Phone,
+  MapPin,
+  ExternalLink,
+  ArrowRight
+} from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import type { User } from "@supabase/supabase-js";
+import { format } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -36,12 +71,72 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Fetch user stats
+  const { data: stats } = useQuery({
+    queryKey: ["user-stats", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      const [businessesRes, reviewsRes, favoritesRes] = await Promise.all([
+        supabase.from("businesses").select("id, is_featured, featured_expires_at").eq("owner_id", user.id),
+        supabase.from("reviews").select("id").eq("user_id", user.id),
+        supabase.from("favorites").select("id").eq("user_id", user.id),
+      ]);
+
+      const businesses = businessesRes.data || [];
+      const featuredBusinesses = businesses.filter(b => 
+        b.is_featured && b.featured_expires_at && new Date(b.featured_expires_at) > new Date()
+      );
+
+      return {
+        totalBusinesses: businesses.length,
+        featuredBusinesses: featuredBusinesses.length,
+        totalReviews: reviewsRes.data?.length || 0,
+        totalFavorites: favoritesRes.data?.length || 0,
+      };
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch badge requests
+  const { data: badgeRequests } = useQuery({
+    queryKey: ["user-badge-requests", user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      const { data } = await supabase
+        .from("badge_requests")
+        .select("*")
+        .eq("email", user.email)
+        .order("request_date", { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    enabled: !!user?.email,
+  });
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
       toast.success("Signed out successfully");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const fullName = formData.get("fullName") as string;
+    
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: fullName }
+      });
+      
+      if (error) throw error;
+      toast.success("Profile updated successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
     }
   };
 
@@ -68,32 +163,34 @@ const Dashboard = () => {
               </div>
               <span className="font-heading font-bold text-2xl">Humble Halal</span>
             </Link>
-            <Button variant="ghost" onClick={handleSignOut} className="gap-2">
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => navigate("/business/submit")} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Business
+              </Button>
+              <Button variant="ghost" onClick={handleSignOut} className="gap-2">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumbs */}
-        <Breadcrumbs 
-          items={[{ label: "Dashboard" }]} 
-          className="mb-6"
-        />
+        <Breadcrumbs items={[{ label: "Dashboard" }]} className="mb-6" />
 
         {/* Welcome Section */}
-        <div className="mb-10 relative overflow-hidden rounded-2xl p-8 gradient-mesh border border-border/50 shadow-lg">
+        <div className="mb-8 relative overflow-hidden rounded-2xl p-8 gradient-mesh border border-border/50 shadow-lg">
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h1 className="font-heading font-bold text-4xl mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Welcome back, {user?.user_metadata?.full_name || "User"}!
+                  Welcome back, {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}!
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                  Manage your business listings and engage with your customers
+                  Manage your business listings, upgrades, and account settings
                 </p>
               </div>
               <div className="hidden md:block animate-float">
@@ -103,167 +200,476 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-10">
-          <Card className="hover-lift border-l-4 border-l-primary shadow-md bg-gradient-to-br from-background to-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-3xl font-bold text-primary">0</span>
-              </div>
-              <h3 className="font-semibold text-sm text-muted-foreground">Total Businesses</h3>
-            </CardContent>
-          </Card>
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
+            <TabsTrigger value="overview" className="gap-2 py-3">
+              <BarChart3 className="w-4 h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="upgrades" className="gap-2 py-3">
+              <Sparkles className="w-4 h-4" />
+              Upgrades
+            </TabsTrigger>
+            <TabsTrigger value="businesses" className="gap-2 py-3">
+              <Building2 className="w-4 h-4" />
+              Businesses
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-2 py-3">
+              <TrendingUp className="w-4 h-4" />
+              Activity
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 py-3">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="hover-lift border-l-4 border-l-secondary shadow-md bg-gradient-to-br from-background to-secondary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-secondary" />
-                </div>
-                <span className="text-3xl font-bold text-secondary">0</span>
-              </div>
-              <h3 className="font-semibold text-sm text-muted-foreground">Reviews Written</h3>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-lift border-l-4 border-l-accent shadow-md bg-gradient-to-br from-background to-accent/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-accent" />
-                </div>
-                <span className="text-3xl font-bold text-accent">0</span>
-              </div>
-              <h3 className="font-semibold text-sm text-muted-foreground">Saved Favorites</h3>
-            </CardContent>
-          </Card>
-
-          <Card className="hover-lift border-l-4 border-l-success shadow-md bg-gradient-to-br from-background to-success/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                  <Eye className="w-6 h-6 text-success" />
-                </div>
-                <span className="text-3xl font-bold text-success">0</span>
-              </div>
-              <h3 className="font-semibold text-sm text-muted-foreground">Profile Views</h3>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Action Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-8">
-          <Card className="lg:col-span-2 shadow-xl hover-lift overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 gradient-hero opacity-5 rounded-full blur-3xl"></div>
-            <CardHeader>
-              <CardTitle className="font-heading text-2xl flex items-center gap-2">
-                <Plus className="w-6 h-6 text-primary" />
-                Get Started
-              </CardTitle>
-              <CardDescription className="text-base">Add your first business listing and reach customers</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                  <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center text-white font-bold flex-shrink-0">
-                    1
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid md:grid-cols-4 gap-6">
+              <Card className="hover-lift border-l-4 border-l-primary shadow-md bg-gradient-to-br from-background to-primary/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <span className="text-3xl font-bold text-primary">{stats?.totalBusinesses || 0}</span>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Create Your Listing</h4>
-                    <p className="text-sm text-muted-foreground">Add business details, photos, and contact information</p>
+                  <h3 className="font-semibold text-sm text-muted-foreground">Total Businesses</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift border-l-4 border-l-secondary shadow-md bg-gradient-to-br from-background to-secondary/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                      <Star className="w-6 h-6 text-secondary" />
+                    </div>
+                    <span className="text-3xl font-bold text-secondary">{stats?.totalReviews || 0}</span>
                   </div>
-                </div>
+                  <h3 className="font-semibold text-sm text-muted-foreground">Reviews Written</h3>
+                </CardContent>
+              </Card>
 
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                  <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center text-white font-bold flex-shrink-0">
-                    2
+              <Card className="hover-lift border-l-4 border-l-accent shadow-md bg-gradient-to-br from-background to-accent/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <Heart className="w-6 h-6 text-accent" />
+                    </div>
+                    <span className="text-3xl font-bold text-accent">{stats?.totalFavorites || 0}</span>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Get Verified</h4>
-                    <p className="text-sm text-muted-foreground">Submit for approval and gain customer trust</p>
+                  <h3 className="font-semibold text-sm text-muted-foreground">Saved Favorites</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift border-l-4 border-l-success shadow-md bg-gradient-to-br from-background to-success/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-success" />
+                    </div>
+                    <span className="text-3xl font-bold text-success">{stats?.featuredBusinesses || 0}</span>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                  <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center text-white font-bold flex-shrink-0">
-                    3
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Grow Your Business</h4>
-                    <p className="text-sm text-muted-foreground">Respond to reviews and attract more customers</p>
-                  </div>
-                </div>
-              </div>
-
-              <Button variant="hero" size="xl" className="w-full gap-2 shadow-glow" onClick={() => navigate("/business/submit")}>
-                <Plus className="w-5 h-5" />
-                Add Your First Business
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-xl hover-lift">
-            <CardHeader>
-              <CardTitle className="font-heading text-xl flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-accent" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <Building2 className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">My Businesses</div>
-                  <div className="text-xs text-muted-foreground">Manage listings</div>
-                </div>
-              </Button>
-
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <Star className="w-5 h-5 text-secondary" />
-                <div className="text-left">
-                  <div className="font-semibold">My Reviews</div>
-                  <div className="text-xs text-muted-foreground">View & edit</div>
-                </div>
-              </Button>
-
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <Heart className="w-5 h-5 text-accent" />
-                <div className="text-left">
-                  <div className="font-semibold">Saved</div>
-                  <div className="text-xs text-muted-foreground">Your favorites</div>
-                </div>
-              </Button>
-
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Messages</div>
-                  <div className="text-xs text-muted-foreground">Enquiries</div>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <Card className="shadow-xl">
-          <CardHeader className="border-b">
-            <CardTitle className="font-heading text-xl">Recent Activity</CardTitle>
-            <CardDescription>Your latest interactions and updates</CardDescription>
-          </CardHeader>
-          <CardContent className="p-12">
-            <div className="text-center text-muted-foreground">
-              <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
-                <TrendingUp className="w-10 h-10" />
-              </div>
-              <p className="text-lg font-medium mb-2">No recent activity</p>
-              <p className="text-sm">Start by adding a business or leaving reviews to see your activity here</p>
+                  <h3 className="font-semibold text-sm text-muted-foreground">Featured Listings</h3>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Quick Actions */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => navigate("/business/submit")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Add Business</h3>
+                      <p className="text-sm text-muted-foreground">Create a new listing</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => setActiveTab("upgrades")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Upgrade to Featured</h3>
+                      <p className="text-sm text-muted-foreground">Get more visibility</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => navigate("/badge-generator")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                      <BadgeIcon className="w-6 h-6 text-success" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Get Free Badge</h3>
+                      <p className="text-sm text-muted-foreground">Earn free featured month</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => navigate("/business-dashboard")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Manage Businesses</h3>
+                      <p className="text-sm text-muted-foreground">View all listings</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => setActiveTab("activity")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-secondary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">View Activity</h3>
+                      <p className="text-sm text-muted-foreground">Recent updates</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-lift shadow-xl cursor-pointer" onClick={() => setActiveTab("settings")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                      <Settings className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Settings</h3>
+                      <p className="text-sm text-muted-foreground">Account preferences</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Upgrades Tab */}
+          <TabsContent value="upgrades" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Featured Listing Upgrade */}
+              <Card className="shadow-xl border-2 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        Featured Listing
+                      </CardTitle>
+                      <CardDescription>Get top placement and increased visibility</CardDescription>
+                    </div>
+                    <Badge className="bg-primary text-white">$29/month</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Top placement on city pages
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Blue border and Featured badge
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Upload up to 8 images
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      3-5x more views and clicks
+                    </li>
+                  </ul>
+                  <Button className="w-full" onClick={() => navigate("/advertise")}>
+                    Learn More & Upgrade
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Badge Generator */}
+              <Card className="shadow-xl border-2 border-success/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <BadgeIcon className="w-5 h-5 text-success" />
+                        Free Badge Program
+                      </CardTitle>
+                      <CardDescription>Get one free month of featured listing</CardDescription>
+                    </div>
+                    <Badge className="bg-success text-white">FREE</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Add our badge to your website and receive one FREE month of featured listing (worth $29).
+                  </p>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Generate your badge code
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Add to your website
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      Receive coupon code within 24-48 hours
+                    </li>
+                  </ul>
+                  {badgeRequests && badgeRequests.length > 0 && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-xs font-semibold mb-2">Your Badge Requests:</p>
+                      {badgeRequests.map((req: any) => (
+                        <div key={req.id} className="flex items-center justify-between text-xs">
+                          <span>{req.business_name}</span>
+                          <Badge variant={req.status === "coupon_sent" ? "default" : "secondary"}>
+                            {req.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Button className="w-full" variant="outline" onClick={() => navigate("/badge-generator")}>
+                    Generate Your Badge
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Current Upgrades */}
+            {stats && stats.featuredBusinesses > 0 && (
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle>Active Upgrades</CardTitle>
+                  <CardDescription>Your current featured listings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                    <p className="text-lg font-semibold mb-2">You have {stats.featuredBusinesses} featured listing(s)</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Manage your featured listings from the Businesses tab
+                    </p>
+                    <Button onClick={() => setActiveTab("businesses")}>
+                      View Businesses
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Businesses Tab */}
+          <TabsContent value="businesses">
+            <Card className="shadow-xl">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Businesses</CardTitle>
+                    <CardDescription>Manage your business listings</CardDescription>
+                  </div>
+                  <Button onClick={() => navigate("/business/submit")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Business
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-semibold mb-2">No businesses yet</p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Start by adding your first business listing
+                  </p>
+                  <Button onClick={() => navigate("/business/submit")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First Business
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Or visit the{" "}
+                    <Link to="/business-dashboard" className="text-primary hover:underline">
+                      Business Owner Dashboard
+                    </Link>{" "}
+                    for advanced management
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value="activity">
+            <Card className="shadow-xl">
+              <CardHeader className="border-b">
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your latest interactions and updates</CardDescription>
+              </CardHeader>
+              <CardContent className="p-12">
+                <div className="text-center text-muted-foreground">
+                  <TrendingUp className="w-20 h-20 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium mb-2">No recent activity</p>
+                  <p className="text-sm">Start by adding a business, leaving reviews, or upgrading to featured</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Profile Settings */}
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Profile Settings
+                  </CardTitle>
+                  <CardDescription>Update your personal information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdateProfile} className="space-y-4">
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={user?.email || ""}
+                        disabled
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        name="fullName"
+                        defaultValue={user?.user_metadata?.full_name || ""}
+                        className="mt-2"
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Save Changes
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Notification Settings */}
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Notifications
+                  </CardTitle>
+                  <CardDescription>Manage your notification preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Push Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications in your browser
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationsEnabled}
+                      onCheckedChange={setNotificationsEnabled}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive updates via email
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Account Actions */}
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle>Account Actions</CardTitle>
+                  <CardDescription>Manage your account</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/advertise")}>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    View Pricing Plans
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/badge-generator")}>
+                    <BadgeIcon className="w-4 h-4 mr-2" />
+                    Badge Generator
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/business-dashboard")}>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Business Owner Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Help & Support */}
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle>Help & Support</CardTitle>
+                  <CardDescription>Get help when you need it</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Mail className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-semibold text-sm">Email Support</p>
+                      <p className="text-xs text-muted-foreground">support@humblehalal.com</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Phone className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-semibold text-sm">Phone Support</p>
+                      <p className="text-xs text-muted-foreground">Available 9am - 6pm SGT</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={() => navigate("/about")}>
+                    Learn More About Us
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

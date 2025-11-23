@@ -7,7 +7,7 @@ interface SEOProps {
   image?: string;
   url?: string;
   type?: "website" | "article" | "business.business";
-  schema?: any;
+  schema?: Record<string, unknown>;
 }
 
 export const SEO = ({ 

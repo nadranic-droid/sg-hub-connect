@@ -52,32 +52,51 @@ export const generateLocalBusinessSchema = (business: {
   phone?: string;
   website?: string;
   image?: string;
+  images?: string[];
   rating?: number;
   reviewCount?: number;
   priceRange?: string;
   latitude?: number;
   longitude?: number;
   isVerified?: boolean;
+  operatingHours?: Record<string, { open: string; close: string; closed: boolean }>;
+  amenities?: string[];
+  email?: string;
+  postalCode?: string;
 }) => {
   const schema: any = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: business.name,
     description: business.description,
-    image: business.image,
     telephone: business.phone,
     url: business.website,
     priceRange: business.priceRange,
   };
 
+  // Handle images - single image or array
+  if (business.images && business.images.length > 0) {
+    schema.image = business.images.map((img: string) => ({
+      "@type": "ImageObject",
+      url: img,
+    }));
+  } else if (business.image) {
+    schema.image = business.image;
+  }
+
+  // Address with postal code
   if (business.address) {
     schema.address = {
       "@type": "PostalAddress",
       streetAddress: business.address,
       addressCountry: "SG",
     };
+    if (business.postalCode) {
+      schema.address.postalCode = business.postalCode;
+    }
   }
 
+  // Geo coordinates
   if (business.latitude && business.longitude) {
     schema.geo = {
       "@type": "GeoCoordinates",
@@ -86,6 +105,7 @@ export const generateLocalBusinessSchema = (business: {
     };
   }
 
+  // Aggregate rating
   if (business.rating && business.reviewCount) {
     schema.aggregateRating = {
       "@type": "AggregateRating",
@@ -96,6 +116,48 @@ export const generateLocalBusinessSchema = (business: {
     };
   }
 
+  // Opening hours
+  if (business.operatingHours) {
+    const dayMap: Record<string, string> = {
+      monday: "Monday",
+      tuesday: "Tuesday",
+      wednesday: "Wednesday",
+      thursday: "Thursday",
+      friday: "Friday",
+      saturday: "Saturday",
+      sunday: "Sunday",
+    };
+
+    schema.openingHoursSpecification = Object.entries(business.operatingHours)
+      .filter(([_, hours]) => !hours.closed)
+      .map(([day, hours]) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: dayMap[day] || day.charAt(0).toUpperCase() + day.slice(1),
+        opens: hours.open,
+        closes: hours.close,
+      }));
+  }
+
+  // Payment accepted
+  if (business.amenities) {
+    const paymentMethods: string[] = [];
+    if (business.amenities.includes("Credit Cards")) {
+      paymentMethods.push("Credit Card");
+    }
+    if (business.amenities.includes("Cash")) {
+      paymentMethods.push("Cash");
+    }
+    if (paymentMethods.length > 0) {
+      schema.paymentAccepted = paymentMethods.join(", ");
+    }
+  }
+
+  // Email
+  if (business.email) {
+    schema.email = business.email;
+  }
+
+  // Certification
   if (business.isVerified) {
     schema.certification = {
       "@type": "Certification",
@@ -154,4 +216,38 @@ export const generateArticleSchema = (article: {
       url: "https://humblehalal.sg/logo.png",
     },
   },
+});
+
+export const generateFAQPageSchema = (faqs: Array<{ question: string; answer: string }>) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+});
+
+export const generateHomepageCategorySchema = (categories: Array<{
+  name: string;
+  slug: string;
+  description?: string;
+}>) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Business Categories",
+  description: "Explore businesses by category on Humble Halal",
+  itemListElement: categories.map((cat, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    item: {
+      "@type": "Category",
+      name: cat.name,
+      url: `https://humblehalal.sg/category/${cat.slug}`,
+      description: cat.description,
+    },
+  })),
 });

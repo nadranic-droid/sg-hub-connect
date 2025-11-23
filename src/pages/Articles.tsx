@@ -9,8 +9,19 @@ import { Calendar, Clock, Tag } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateCollectionPageSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  cover_image?: string;
+  published_at?: string;
+  category?: string;
+  tags?: string[];
+}
+
 const Articles = () => {
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

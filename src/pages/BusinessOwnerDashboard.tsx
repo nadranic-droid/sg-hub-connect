@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Building2, Star, MessageSquare, Plus, TrendingUp, Eye, Users, BarChart3 } from "lucide-react";
+import { LogOut, Building2, Star, MessageSquare, Plus, TrendingUp, Eye, Users, BarChart3, Sparkles, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -27,6 +27,9 @@ interface Business {
   views_count: number;
   review_count: number;
   avg_rating: number;
+  is_featured: boolean;
+  featured_expires_at: string | null;
+  slug: string;
 }
 
 interface Review {
@@ -92,7 +95,7 @@ const BusinessOwnerDashboard = () => {
     // Load businesses
     const { data: businessData } = await supabase
       .from("businesses")
-      .select("id, name, status, views_count, review_count, avg_rating")
+      .select("id, name, status, views_count, review_count, avg_rating, is_featured, featured_expires_at, slug")
       .eq("owner_id", userId);
 
     if (businessData) {
@@ -363,37 +366,96 @@ const BusinessOwnerDashboard = () => {
                     <TableRow>
                       <TableHead>Business Name</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Featured</TableHead>
                       <TableHead className="text-right">Views</TableHead>
                       <TableHead className="text-right">Reviews</TableHead>
                       <TableHead className="text-right">Rating</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {businesses.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                           No businesses yet. Add your first business to get started!
                         </TableCell>
                       </TableRow>
                     ) : (
-                      businesses.map((business) => (
-                        <TableRow key={business.id}>
-                          <TableCell className="font-medium">{business.name}</TableCell>
-                          <TableCell>
-                            <Badge variant={business.status === "approved" ? "default" : "secondary"}>
-                              {business.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">{business.views_count}</TableCell>
-                          <TableCell className="text-right">{business.review_count}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Star className="w-4 h-4 fill-secondary text-secondary" />
-                              {business.avg_rating.toFixed(1)}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      businesses.map((business) => {
+                        const isFeatured = business.is_featured;
+                        const expiresAt = business.featured_expires_at 
+                          ? new Date(business.featured_expires_at)
+                          : null;
+                        const isExpired = expiresAt && expiresAt < new Date();
+                        const daysRemaining = expiresAt && !isExpired
+                          ? Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          : null;
+
+                        return (
+                          <TableRow key={business.id}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {business.name}
+                                <Link 
+                                  to={`/business/${business.slug}`}
+                                  className="text-muted-foreground hover:text-foreground"
+                                  target="_blank"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </Link>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={business.status === "approved" ? "default" : "secondary"}>
+                                {business.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {isFeatured && !isExpired ? (
+                                <Badge className="bg-blue-600 text-white gap-1">
+                                  <Sparkles className="w-3 h-3" />
+                                  Featured
+                                  {daysRemaining !== null && (
+                                    <span className="ml-1 text-xs">({daysRemaining}d left)</span>
+                                  )}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">{business.views_count}</TableCell>
+                            <TableCell className="text-right">{business.review_count}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Star className="w-4 h-4 fill-secondary text-secondary" />
+                                {business.avg_rating.toFixed(1)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {business.status === "approved" && (
+                                <Button
+                                  variant={isFeatured && !isExpired ? "outline" : "default"}
+                                  size="sm"
+                                  onClick={() => navigate(`/upgrade/featured/${business.id}`)}
+                                  className="gap-1"
+                                >
+                                  {isFeatured && !isExpired ? (
+                                    <>
+                                      <Sparkles className="w-3 h-3" />
+                                      Manage
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-3 h-3" />
+                                      Upgrade
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     )}
                   </TableBody>
                 </Table>

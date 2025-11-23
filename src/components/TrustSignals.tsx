@@ -5,17 +5,17 @@ export const TrustSignals = () => {
     {
       icon: Shield,
       title: "Clear Halal Status",
-      description: "Clear Halal Status to ws-oirpact clear halal status.",
+      description: "Every listing clearly displays its Halal certification status, whether MUIS-certified or Muslim-owned, so you can dine with confidence.",
     },
     {
       icon: CheckCircle,
       title: "Verified Listings",
-      description: "Werified ths aracents by holdxii mocest tns grouid busts.",
+      description: "All businesses are verified by our team to ensure accuracy and authenticity, giving you peace of mind.",
     },
     {
       icon: Users,
       title: "Community Driven",
-      description: "Community meet cirata oriers and promots oun trivxt.",
+      description: "Built by the community, for the community. Share your favorite spots and help others discover amazing Halal businesses.",
     },
   ];
 

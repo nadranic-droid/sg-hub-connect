@@ -1,168 +1,350 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Search, MapPin, ArrowLeft, Building2, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Search, Building2, MapPin, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 const ClaimBusiness = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const businessId = searchParams.get("business");
-  
+  const preSelectedBusinessId = searchParams.get("business");
+
+  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [filteredBusinesses, setFilteredBusinesses] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(preSelectedBusinessId || "");
   const [loading, setLoading] = useState(false);
-  const [business, setBusiness] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [formData, setFormData] = useState({
-    notes: "",
-    proof_documents: [] as string[],
+    contactName: "",
+    email: "",
+    phone: "",
+    notes: ""
   });
 
   useEffect(() => {
-    if (businessId) {
-      const fetchBusiness = async () => {
-        const { data } = await supabase
-          .from("businesses")
-          .select("*")
-          .eq("id", businessId)
-          .maybeSingle();
+    const fetchData = async () => {
+      // Fetch businesses with city and category info
+      const { data: businessData } = await supabase
+        .from("businesses")
+        .select(`
+          id, 
+          name, 
+          address,
+          city_id,
+          category_id,
+          cities (id, name, slug),
+          categories (id, name)
+        `)
+        .eq("is_claimed", false)
+        .eq("status", "approved")
+        .order("name");
+      
+      setBusinesses(businessData || []);
 
-        setBusiness(data);
-      };
-      fetchBusiness();
+      // Fetch cities
+      const { data: cityData } = await (supabase as any)
+        .from("cities")
+        .select("id, name, slug")
+        .eq("is_public", true)
+        .order("name");
+      
+      setCities(cityData || []);
+
+      // Fetch categories
+      const { data: categoryData } = await supabase
+        .from("categories")
+        .select("id, name")
+        .order("name");
+      
+      setCategories(categoryData || []);
+    };
+    fetchData();
+  }, []);
+
+  // Filter businesses based on search, city, and category
+  useEffect(() => {
+    let filtered = businesses;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter((b) =>
+        b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.address?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-  }, [businessId]);
+
+    // Filter by city
+    if (selectedCity !== "all") {
+      filtered = filtered.filter((b) => b.city_id === selectedCity);
+    }
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((b) => b.category_id === selectedCategory);
+    }
+
+    setFilteredBusinesses(filtered);
+  }, [businesses, searchTerm, selectedCity, selectedCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      toast.error("Please sign in to claim a business");
-      navigate("/auth");
-      return;
+    if (!value) {
+        toast.error("Please select a business to claim");
+        return;
     }
 
-    if (!businessId) {
-      toast.error("No business selected");
-      return;
+    setLoading(true);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        toast.error("You must be logged in to claim a business");
+        navigate("/auth");
+        return;
     }
 
     const { error } = await supabase.from("claims").insert({
-      business_id: businessId,
-      user_id: session.user.id,
-      notes: formData.notes,
-      status: "pending",
+        business_id: value,
+        user_id: user.id,
+        notes: `Contact: ${formData.contactName}, Phone: ${formData.phone}, Email: ${formData.email}\nNotes: ${formData.notes}`,
+        status: "pending"
     });
 
     if (error) {
-      toast.error("Failed to submit claim");
-      console.error(error);
+        toast.error("Failed to submit claim request");
     } else {
-      toast.success("Claim submitted successfully! Our team will review it shortly.");
-      navigate("/dashboard");
+        toast.success("Claim request submitted successfully! We will contact you shortly.");
+        navigate("/dashboard");
     }
-
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <div className="font-heading font-bold text-xl leading-tight">
-                Humble Halal
-                <div className="text-xs font-normal opacity-90">Singapore Business Directory</div>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <Link to="/auth">
-                <button className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <User className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container max-w-3xl mx-auto px-4 py-10">
-        <Button variant="ghost" asChild className="mb-6">
-          <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Link>
-        </Button>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-heading text-3xl flex items-center gap-3">
-              <Building2 className="w-8 h-8 text-primary" />
-              Claim Your Business
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Verify your ownership to manage your business listing and respond to reviews
+      <SEO 
+        title="Claim Your Business - Humble Halal"
+        description="Verify your ownership and manage your business listing on Humble Halal."
+      />
+      <Header />
+      
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <h1 className="font-heading font-bold text-3xl md:text-4xl mb-4">Claim Your Business</h1>
+            <p className="text-muted-foreground text-lg">
+              Take control of your listing, update information, and respond to reviews.
             </p>
-          </CardHeader>
-          <CardContent>
-            {business && (
-              <div className="mb-6 p-4 bg-muted rounded-lg">
-                <h3 className="font-semibold mb-1">{business.name}</h3>
-                <p className="text-sm text-muted-foreground">{business.address}</p>
-              </div>
-            )}
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="notes">
-                  Additional Information *
-                  <span className="text-sm text-muted-foreground ml-2">
-                    Explain your connection to this business
-                  </span>
-                </Label>
-                <Textarea
-                  id="notes"
-                  required
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="I am the owner/manager of this business..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex gap-3">
-                  <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-semibold text-blue-900 mb-1">Verification Process</p>
-                    <p className="text-blue-700">
-                      Our team will review your claim within 2-3 business days. You may be contacted for additional verification documents.
-                    </p>
+          <Card>
+            <CardContent className="p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Filters */}
+                <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Filter className="w-4 h-4 text-muted-foreground" />
+                    <Label className="text-sm font-semibold">Filter Businesses</Label>
                   </div>
-                </div>
-              </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="search">Search</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="search"
+                          placeholder="Business name or address..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-primary text-white hover:bg-primary-dark"
-                disabled={loading}
-              >
-                {loading ? "Submitting..." : "Submit Claim"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Select value={selectedCity} onValueChange={setSelectedCity}>
+                        <SelectTrigger id="city">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          <SelectValue placeholder="All Cities" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Cities</SelectItem>
+                          {cities.map((city) => (
+                            <SelectItem key={city.id} value={city.id}>
+                              {city.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger id="category">
+                          <Building2 className="w-4 h-4 mr-2" />
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {filteredBusinesses.length !== businesses.length && (
+                    <p className="text-xs text-muted-foreground">
+                      Showing {filteredBusinesses.length} of {businesses.length} businesses
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Select Business</Label>
+                    <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                        >
+                        {value
+                            ? filteredBusinesses.find((b) => b.id === value)?.name || businesses.find((b) => b.id === value)?.name
+                            : "Search for your business..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                        <Command>
+                        <CommandInput placeholder="Search business name..." value={searchTerm} onValueChange={setSearchTerm} />
+                        <CommandList>
+                            <CommandEmpty>No unclaimed business found.</CommandEmpty>
+                            <CommandGroup>
+                            {filteredBusinesses.map((business) => (
+                                <CommandItem
+                                key={business.id}
+                                value={business.id}
+                                keywords={[business.name, business.address, business.cities?.name, business.categories?.name]}
+                                onSelect={(currentValue) => {
+                                    setValue(currentValue === value ? "" : currentValue);
+                                    setOpen(false);
+                                }}
+                                >
+                                <Check
+                                    className={cn(
+                                    "mr-2 h-4 w-4",
+                                    value === business.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                />
+                                <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="font-medium truncate">{business.name}</span>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      {business.cities?.name && (
+                                        <>
+                                          <MapPin className="w-3 h-3" />
+                                          <span>{business.cities.name}</span>
+                                        </>
+                                      )}
+                                      {business.categories?.name && (
+                                        <>
+                                          <span>•</span>
+                                          <span>{business.categories.name}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground truncate">{business.address}</span>
+                                </div>
+                                </CommandItem>
+                            ))}
+                            </CommandGroup>
+                        </CommandList>
+                        </Command>
+                    </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                        Can't find your business? <Link to="/business/submit" className="text-primary hover:underline">Create a new listing</Link>.
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="contactName">Contact Person</Label>
+                        <Input 
+                            id="contactName" 
+                            placeholder="Full Name" 
+                            value={formData.contactName}
+                            onChange={(e) => setFormData({...formData, contactName: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input 
+                            id="phone" 
+                            placeholder="+65 1234 5678" 
+                            value={formData.phone}
+                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="email">Business Email</Label>
+                    <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="owner@business.com" 
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        required
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Additional Verification Details</Label>
+                    <Textarea 
+                        id="notes" 
+                        placeholder="Please provide any details that help verify your ownership (e.g. ACRA number, social media handle)..." 
+                        className="min-h-[100px]"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    />
+                </div>
+
+                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Submitting..." : "Submit Claim Request"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </main>
+      <Footer />
     </div>
   );
 };

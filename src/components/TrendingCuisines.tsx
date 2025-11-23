@@ -45,6 +45,12 @@ export const TrendingCuisines = () => {
                 src={cuisine.image}
                 alt={cuisine.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => {
+                  // Fallback to a generic food image if original fails
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop";
+                  target.onerror = null;
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <div className="absolute inset-0 flex items-end justify-center p-4">

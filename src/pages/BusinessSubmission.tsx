@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { sendGoHighLevelWebhook } from "@/utils/webhooks";
 
 const steps = [
   { id: 1, name: "Basic Info", icon: Building2 },
@@ -31,6 +32,25 @@ const amenities = [
 ];
 
 const priceRanges = ["$", "$$", "$$$", "$$$$"];
+
+// Helper function to extract city from address
+const extractCityFromAddress = (address: string): string | null => {
+  // Simple extraction - can be enhanced with geocoding API
+  // For Singapore, common patterns: "Singapore", "SG", postal code areas
+  const singaporeAreas = [
+    "Orchard", "Marina Bay", "Chinatown", "Little India", "Sentosa",
+    "Jurong", "Tampines", "Woodlands", "Ang Mo Kio", "Bishan",
+    "Clementi", "Pasir Ris", "Punggol", "Sengkang", "Yishun"
+  ];
+  
+  for (const area of singaporeAreas) {
+    if (address.toLowerCase().includes(area.toLowerCase())) {
+      return area;
+    }
+  }
+  
+  return "Singapore"; // Default
+};
 
 const BusinessSubmission = () => {
   const navigate = useNavigate();
@@ -81,7 +101,7 @@ const BusinessSubmission = () => {
 
   const progress = (currentStep / steps.length) * 100;
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | File | File[] | Record<string, unknown> | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -145,11 +165,46 @@ const BusinessSubmission = () => {
 
     setLoading(true);
     try {
+      // Check if user is logged in (optional for public submissions)
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
+      
       // Generate slug from name
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+      // Extract city from address or use a default
+      // This is a simple implementation - you may want to use a geocoding service
+      const cityName = extractCityFromAddress(formData.address) || "Singapore";
+      const citySlug = cityName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+      // Check if city exists, create if it doesn't
+      let cityId: string | null = null;
+      const { data: existingCity } = await (supabase as any)
+        .from("cities")
+        .select("id")
+        .eq("slug", citySlug)
+        .maybeSingle();
+
+      if (existingCity) {
+        cityId = existingCity.id;
+      } else {
+        // Create new city (hidden until approved)
+        const { data: newCity, error: cityError } = await (supabase as any)
+          .from("cities")
+          .insert({
+            name: cityName,
+            slug: citySlug,
+            state_id: null, // Will be set later or use default Singapore state
+            is_public: false, // Hidden until approved
+            created_from_submission: true,
+            description: `Discover halal businesses in ${cityName}`,
+          })
+          .select()
+          .single();
+
+        if (!cityError && newCity) {
+          cityId = newCity.id;
+        }
+      }
 
       const businessData = {
         name: formData.name,
@@ -168,18 +223,54 @@ const BusinessSubmission = () => {
         seo_title: formData.seo_title || formData.name,
         seo_description: formData.seo_description || formData.short_description,
         seo_keywords: formData.seo_keywords,
-        owner_id: user.id,
-        status: "pending"
+        owner_id: user?.id || null, // Allow null for guest submissions
+        city_id: cityId,
+        status: "pending",
+        submitted_by_email: formData.email, // Track submitter email
       };
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from("businesses")
-        .insert([businessData]);
+        .insert([businessData])
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Send webhook to GoHighLevel if configured
+      const webhookUrl = import.meta.env.VITE_GOHIGHLEVEL_WEBHOOK_URL;
+      if (webhookUrl && insertedData) {
+        // Send webhook asynchronously (don't block submission)
+        sendGoHighLevelWebhook(webhookUrl, "BusinessSubmission", {
+          business_id: insertedData.id,
+          business_name: insertedData.name,
+          slug: insertedData.slug,
+          owner_id: insertedData.owner_id,
+          status: insertedData.status,
+          contact: {
+            email: insertedData.email,
+            phone: insertedData.phone,
+            whatsapp: insertedData.whatsapp,
+          },
+          location: {
+            address: insertedData.address,
+            postal_code: insertedData.postal_code,
+          },
+          submitted_at: new Date().toISOString(),
+        }).catch((err) => {
+          console.error("Webhook failed (non-critical):", err);
+          // Don't show error to user, webhook is optional
+        });
+      }
+
       toast.success("Business submitted successfully! Pending approval.");
-      navigate("/dashboard");
+      
+      // Redirect based on whether user is logged in
+      if (user) {
+        navigate("/dashboard");
+      } else {
+        navigate("/", { state: { message: "Thank you for your submission! We'll review it and contact you soon." } });
+      }
     } catch (error: any) {
       console.error("Submission error:", error);
       toast.error(error.message || "Failed to submit business");

@@ -14,20 +14,22 @@ export const Footer = () => {
             </div>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Home</h4>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Discover</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/" className="hover:text-secondary transition-colors">About</Link></li>
-              <li><Link to="/articles" className="hover:text-secondary transition-colors">Blog</Link></li>
-              <li><Link to="/" className="hover:text-secondary transition-colors">FAQs</Link></li>
-              <li><Link to="/" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/category/restaurant" className="hover:text-secondary transition-colors">Restaurant</Link></li>
+              <li><Link to="/category/cafes" className="hover:text-secondary transition-colors">Cafes</Link></li>
+              <li><Link to="/category/tour" className="hover:text-secondary transition-colors">Tour</Link></li>
+              <li><Link to="/category/drinks" className="hover:text-secondary transition-colors">Drinks</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Links</h4>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Community</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/auth" className="hover:text-secondary transition-colors">Contact Us</Link></li>
-              <li><Link to="/category/food-beverage" className="hover:text-secondary transition-colors">Verified Listings</Link></li>
-              <li><Link to="/" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/category/community" className="hover:text-secondary transition-colors">Community</Link></li>
+              <li><Link to="/events" className="hover:text-secondary transition-colors">Events</Link></li>
+              <li><Link to="/resources" className="hover:text-secondary transition-colors">Resources</Link></li>
+              <li><Link to="/articles" className="hover:text-secondary transition-colors">Blogs</Link></li>
+              <li><Link to="/about" className="hover:text-secondary transition-colors">About Us</Link></li>
             </ul>
           </div>
         </div>

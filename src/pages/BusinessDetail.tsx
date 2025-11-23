@@ -16,12 +16,34 @@ import {
   Shield,
   Clock,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { ReviewForm } from "@/components/ReviewForm";
+import { SEO } from "@/components/SEO";
+import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
+
+interface Business {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  short_description?: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  cover_image?: string;
+  images?: string[];
+  avg_rating?: number;
+  review_count?: number;
+  categories?: { name: string; slug: string };
+  neighbourhoods?: { name: string; slug: string; region?: string };
+  price_range?: string;
+  amenities?: string[];
+  operating_hours?: Record<string, unknown>;
+  latitude?: number;
+  longitude?: number;
+}
 
 const BusinessDetail = () => {
   const { slug } = useParams();
-  const [business, setBusiness] = useState<any>(null);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +77,10 @@ const BusinessDetail = () => {
   if (!business) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+        <SEO
+          title="Business Not Found"
+          description="The business you're looking for doesn't exist."
+        />
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Business Not Found</h1>
           <p className="text-muted-foreground mb-4">The business you're looking for doesn't exist.</p>
@@ -66,8 +92,48 @@ const BusinessDetail = () => {
     );
   }
 
+  const localBusinessSchema = generateLocalBusinessSchema({
+    name: business.name,
+    description: business.description || business.short_description,
+    address: business.address,
+    phone: business.phone,
+    website: business.website,
+    image: business.cover_image || business.images?.[0],
+    rating: business.avg_rating,
+    reviewCount: business.review_count,
+    priceRange: business.price_range,
+    latitude: business.latitude ? parseFloat(business.latitude) : undefined,
+    longitude: business.longitude ? parseFloat(business.longitude) : undefined,
+    isVerified: business.is_verified
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://humblehalal.sg" },
+    { name: business.categories?.name, url: `https://humblehalal.sg/category/${business.categories?.slug}` },
+    { name: business.name, url: `https://humblehalal.sg/business/${business.slug}` },
+  ]);
+
+  const seoTitle = business.seo_title || `${business.name} - Halal ${business.categories?.name} in ${business.neighbourhoods?.name}, Singapore`;
+  const seoDescription = business.seo_description || 
+    `${business.name} in ${business.neighbourhoods?.name}: Read reviews, view menu and get directions. Rated ${business.avg_rating || 0}/5 by the community. MUIS certified.`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords={[
+          business.name, 
+          "halal", 
+          business.categories?.name, 
+          business.neighbourhoods?.name, 
+          "singapore",
+          business.is_verified ? "muis certified" : "muslim owned"
+        ]}
+        schema={[breadcrumbSchema, localBusinessSchema]}
+        type="business.business"
+        image={business.cover_image || business.images?.[0]}
+      />
       {/* Header */}
       <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-4">

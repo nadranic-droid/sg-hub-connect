@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
 
+import { Header } from "@/components/Header";
+import { LinkMesh } from "@/components/LinkMesh";
+import { NeighbourhoodFAQ } from "@/components/NeighbourhoodFAQ";
+
 const NeighbourhoodPage = () => {
   const { slug } = useParams();
   const [neighbourhood, setNeighbourhood] = useState<any>(null);
@@ -82,6 +86,9 @@ const NeighbourhoodPage = () => {
     .map((b) => ({
       id: b.id,
       name: b.name,
+      slug: b.slug,
+      address: b.address,
+      phone: b.phone,
       latitude: parseFloat(b.latitude),
       longitude: parseFloat(b.longitude),
     }));
@@ -99,9 +106,9 @@ const NeighbourhoodPage = () => {
     businesses.length
   );
 
-  const seoTitle = neighbourhood.seo_title || `Halal Businesses in ${neighbourhood.name} - ${neighbourhood.region} Singapore`;
+  const seoTitle = neighbourhood.seo_title || `Top Halal Food & Services in ${neighbourhood.name} (${new Date().getFullYear()}) | Humble Halal`;
   const seoDescription = neighbourhood.seo_description || 
-    `Find ${businesses.length}+ verified Halal businesses in ${neighbourhood.name}, ${neighbourhood.region}. MUIS-certified restaurants and Muslim-owned services.`;
+    `Explore the best Halal food and services in ${neighbourhood.name}, ${neighbourhood.region}. We found ${businesses.length}+ verified spots including restaurants, cafes and mosques near ${neighbourhood.name}.`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,6 +268,19 @@ const NeighbourhoodPage = () => {
           </div>
         )}
       </main>
+
+      {/* FAQ Section */}
+      {businesses.length > 0 && (
+        <NeighbourhoodFAQ
+          neighbourhoodName={neighbourhood.name}
+          region={neighbourhood.region}
+          businessCount={businesses.length}
+          verifiedCount={businesses.filter((b) => b.is_verified).length}
+          categories={[...new Set(businesses.map((b) => b.categories?.name).filter(Boolean))] as string[]}
+        />
+      )}
+      
+      <LinkMesh currentSlug={slug} type="neighbourhood" />
     </div>
   );
 };

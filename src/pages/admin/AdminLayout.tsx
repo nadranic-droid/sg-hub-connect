@@ -18,12 +18,13 @@ import {
   CreditCard,
   Target,
   FileText,
+  Badge as BadgeIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +48,10 @@ const AdminLayout = () => {
 
       if (!roleData) {
         toast.error("Access denied. Admin privileges required.");
-        navigate("/dashboard");
+        // Prevent infinite loop if user is already on dashboard but not admin
+        if (window.location.pathname.startsWith("/admin")) {
+          navigate("/dashboard");
+        }
         return;
       }
 
@@ -127,6 +131,9 @@ const AdminLayout = () => {
               </SidebarNavLink>
               <SidebarNavLink to="/admin/ads" icon={<Target />}>
                 Ad Slots
+              </SidebarNavLink>
+              <SidebarNavLink to="/admin/badge-requests" icon={<BadgeIcon />}>
+                Badge Requests
               </SidebarNavLink>
               <SidebarNavLink to="/admin/analytics" icon={<BarChart3 />}>
                 Analytics

@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Calendar, MapPin, User, Search, Plus } from "lucide-react";
+import { Calendar, MapPin, Plus, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const Events = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,37 +39,7 @@ const Events = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <div className="font-heading font-bold text-xl leading-tight">
-                Humble Halal
-                <div className="text-xs font-normal opacity-90">Singapore Business Directory</div>
-              </div>
-            </Link>
-
-            <div className="flex-1 max-w-2xl mx-8 relative">
-              <Input
-                placeholder="Search events..."
-                className="w-full h-11 pl-4 pr-12 bg-white text-foreground border-0"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <Link to="/auth">
-                <button className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <User className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero */}
       <section className="bg-muted/50 border-b border-border py-12">
@@ -94,13 +66,17 @@ const Events = () => {
         {events.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <Card key={event.id} className="overflow-hidden hover-lift border">
+              <Card 
+                key={event.id} 
+                className="overflow-hidden hover-lift border cursor-pointer transition-all hover:shadow-lg"
+                onClick={() => navigate(`/events/${event.id}`)}
+              >
                 {event.image && (
                   <div className="aspect-video overflow-hidden">
                     <img
                       src={event.image}
                       alt={event.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform hover:scale-105"
                     />
                   </div>
                 )}
@@ -123,6 +99,16 @@ const Events = () => {
                       <span>{event.location}</span>
                     </div>
                   )}
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/events/${event.id}`);
+                    }}
+                  >
+                    View Details <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -140,6 +126,7 @@ const Events = () => {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 };

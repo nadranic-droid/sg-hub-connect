@@ -21,15 +21,39 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        // Check if the user is trying to access admin
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+          
+        if (roleData) {
+             navigate("/admin");
+        } else {
+             navigate("/dashboard");
+        }
       }
     };
     checkUser();
 
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        navigate("/dashboard");
+         // Check role on sign in
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+          
+        if (roleData) {
+             navigate("/admin");
+        } else {
+             navigate("/dashboard");
+        }
       }
     });
 
@@ -49,8 +73,9 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Signed in successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to sign in";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -75,8 +100,9 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Account created! You can now sign in.");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign up");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to sign up";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -92,8 +118,9 @@ const Auth = () => {
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign in with Google");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to sign in with Google";
+      toast.error(errorMessage);
     }
   };
 

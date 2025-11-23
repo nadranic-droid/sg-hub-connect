@@ -42,12 +42,12 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const body = await req.json();
-    const { priceId } = body;
+    const { priceId, businessId, planType, duration } = body;
     
     if (!priceId) {
       throw new Error("Price ID is required");
     }
-    logStep("Price ID received", { priceId });
+    logStep("Price ID received", { priceId, businessId, planType, duration });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -72,6 +72,30 @@ serve(async (req) => {
 
     // Create checkout session
     const origin = req.headers.get("origin") || "http://localhost:3000";
+    
+    // Determine success URL based on plan type
+    const successUrl = planType === "featured_listing" 
+      ? `${origin}/business-dashboard?session_id={CHECKOUT_SESSION_ID}&upgrade=success`
+      : `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
+    
+    const cancelUrl = planType === "featured_listing"
+      ? `${origin}/upgrade/featured/${businessId || ""}`
+      : `${origin}/dashboard`;
+
+    const sessionMetadata: Record<string, string> = {
+      user_id: user.id,
+    };
+    
+    if (businessId) {
+      sessionMetadata.business_id = businessId;
+    }
+    if (planType) {
+      sessionMetadata.plan_type = planType;
+    }
+    if (duration) {
+      sessionMetadata.duration = duration;
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -81,9 +105,10 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/dashboard`,
+      mode: planType === "featured_listing" ? "payment" : "subscription", // Featured listings are one-time payments
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: sessionMetadata,
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });

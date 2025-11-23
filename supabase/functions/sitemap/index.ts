@@ -1,11 +1,36 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+/// <reference lib="deno.ns" />
+/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+// Type definitions for sitemap data
+interface Category {
+  slug: string;
+  updated_at: string | null;
+}
+
+interface Neighbourhood {
+  slug: string;
+  updated_at: string | null;
+}
+
+interface Business {
+  slug: string;
+  updated_at: string | null;
+}
+
+interface Article {
+  slug: string;
+  updated_at: string | null;
+  is_featured: boolean | null;
+}
+
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -44,7 +69,7 @@ Deno.serve(async (req) => {
   </url>\n`;
 
     // Categories
-    categoriesData.data?.forEach(category => {
+    categoriesData.data?.forEach((category: Category) => {
       xml += `  <url>
     <loc>${baseUrl}/category/${category.slug}</loc>
     <lastmod>${category.updated_at || currentDate}</lastmod>
@@ -54,7 +79,7 @@ Deno.serve(async (req) => {
     });
 
     // Neighbourhoods
-    neighbourhoodsData.data?.forEach(neighbourhood => {
+    neighbourhoodsData.data?.forEach((neighbourhood: Neighbourhood) => {
       xml += `  <url>
     <loc>${baseUrl}/neighbourhood/${neighbourhood.slug}</loc>
     <lastmod>${neighbourhood.updated_at || currentDate}</lastmod>
@@ -64,7 +89,7 @@ Deno.serve(async (req) => {
     });
 
     // Businesses
-    businessesData.data?.forEach(business => {
+    businessesData.data?.forEach((business: Business) => {
       xml += `  <url>
     <loc>${baseUrl}/business/${business.slug}</loc>
     <lastmod>${business.updated_at || currentDate}</lastmod>
@@ -74,7 +99,7 @@ Deno.serve(async (req) => {
     });
 
     // Articles
-    articlesData.data?.forEach(article => {
+    articlesData.data?.forEach((article: Article) => {
       const priority = article.is_featured ? '0.8' : '0.6';
       xml += `  <url>
     <loc>${baseUrl}/articles/${article.slug}</loc>
@@ -88,6 +113,8 @@ Deno.serve(async (req) => {
     const staticPages = [
       { path: '/search', priority: '0.7' },
       { path: '/events', priority: '0.6' },
+      { path: '/articles', priority: '0.7' },
+      { path: '/resources', priority: '0.6' },
       { path: '/auth', priority: '0.3' },
     ];
 

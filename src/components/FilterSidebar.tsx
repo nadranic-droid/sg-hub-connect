@@ -10,7 +10,14 @@ import { Star, X } from "lucide-react";
 interface FilterSidebarProps {
   categories?: { id: string; name: string }[];
   neighbourhoods?: { id: string; name: string }[];
-  onFilterChange?: (filters: any) => void;
+  onFilterChange?: (filters: {
+    categories?: string[];
+    neighbourhoods?: string[];
+    rating?: number;
+    priceRange?: string;
+    amenities?: string[];
+    openNow?: boolean;
+  }) => void;
 }
 
 export const FilterSidebar = ({

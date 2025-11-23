@@ -12,6 +12,7 @@ import { toast } from "sonner";
 const MembershipPlans = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null); // Add state for editing
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -33,34 +34,69 @@ const MembershipPlans = () => {
     setPlans(data || []);
   };
 
+  const handleEdit = (plan: any) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      description: plan.description || "",
+      price: plan.price.toString(),
+      billing_interval: plan.billing_interval,
+      features: plan.features ? plan.features.join("\n") : "",
+    });
+    setShowForm(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const features = formData.features.split("\n").filter((f) => f.trim());
-
-    const { error } = await supabase.from("membership_plans").insert({
+    const payload = {
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
       billing_interval: formData.billing_interval,
       features: features,
-    });
+    };
+
+    let error;
+    if (editingPlan) {
+        const { error: updateError } = await supabase
+            .from("membership_plans")
+            .update(payload)
+            .eq("id", editingPlan.id);
+        error = updateError;
+    } else {
+        const { error: insertError } = await supabase
+            .from("membership_plans")
+            .insert(payload);
+        error = insertError;
+    }
 
     if (error) {
-      toast.error("Failed to create plan");
+      toast.error(error.message);
     } else {
-      toast.success("Plan created successfully");
+      toast.success(editingPlan ? "Plan updated successfully" : "Plan created successfully");
       setShowForm(false);
+      setEditingPlan(null);
       setFormData({ name: "", description: "", price: "", billing_interval: "month", features: "" });
       fetchPlans();
     }
   };
 
+  const cancelEdit = () => {
+      setShowForm(false);
+      setEditingPlan(null);
+      setFormData({ name: "", description: "", price: "", billing_interval: "month", features: "" });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="font-heading font-bold text-3xl">Membership Plans</h2>
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+        <Button onClick={() => {
+            if (showForm) cancelEdit();
+            else setShowForm(true);
+        }} className="gap-2">
           <Plus className="w-4 h-4" />
           {showForm ? "Cancel" : "Add Plan"}
         </Button>
@@ -69,7 +105,7 @@ const MembershipPlans = () => {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Create New Plan</CardTitle>
+            <CardTitle>{editingPlan ? "Edit Plan" : "Create New Plan"}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,7 +171,7 @@ const MembershipPlans = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full">Create Plan</Button>
+              <Button type="submit" className="w-full">{editingPlan ? "Update Plan" : "Create Plan"}</Button>
             </form>
           </CardContent>
         </Card>
@@ -172,7 +208,7 @@ const MembershipPlans = () => {
                 </ul>
               )}
 
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => handleEdit(plan)}>
                 Edit Plan
               </Button>
             </CardContent>
