@@ -62,7 +62,7 @@ const CityPage = () => {
       }
 
       // Fetch businesses in this city
-      const { data: businessData } = await supabase
+      const { data: businessData } = await (supabase as any)
         .from("businesses")
         .select(`
           *,

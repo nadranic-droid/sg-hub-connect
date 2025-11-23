@@ -23,7 +23,7 @@ import {
   Badge as BadgeIcon,
   Settings,
   Bell,
-  User,
+  User as UserIcon,
   CreditCard,
   BarChart3,
   Zap,
@@ -106,8 +106,8 @@ const Dashboard = () => {
       const { data } = await supabase
         .from("badge_requests")
         .select("*")
-        .eq("email", user.email)
-        .order("request_date", { ascending: false })
+        .eq("contact_email", user.email)
+        .order("created_at", { ascending: false })
         .limit(5);
       return data || [];
     },
@@ -547,7 +547,7 @@ const Dashboard = () => {
               <Card className="shadow-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
+                    <UserIcon className="w-5 h-5" />
                     Profile Settings
                   </CardTitle>
                   <CardDescription>Update your personal information</CardDescription>
