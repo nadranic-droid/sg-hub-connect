@@ -28,7 +28,6 @@ const ClaimBusiness = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     contactName: "",
     email: "",
@@ -229,14 +228,6 @@ const ClaimBusiness = () => {
                         value={searchTerm}
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
-                          if (!open && e.target.value) {
-                            setOpen(true);
-                          }
-                        }}
-                        onFocus={() => {
-                          if (searchTerm || filteredBusinesses.length > 0) {
-                            setOpen(true);
-                          }
                         }}
                         className="pl-9"
                       />
@@ -251,7 +242,6 @@ const ClaimBusiness = () => {
                             onClick={() => {
                               setValue(business.id);
                               setSearchTerm(business.name);
-                              setOpen(false);
                             }}
                             className={cn(
                               "w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0",

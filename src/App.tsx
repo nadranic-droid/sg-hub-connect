@@ -45,6 +45,8 @@ import CommunityPage from "./pages/CommunityPage";
 import About from "./pages/About";
 import Advertise from "./pages/Advertise";
 import BadgeGenerator from "./pages/BadgeGenerator";
+import RestaurantHub from "./pages/RestaurantHub";
+import CafeHub from "./pages/CafeHub";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/business-dashboard" element={<BusinessOwnerDashboard />} />
             <Route path="/business/submit" element={<BusinessSubmission />} />
+            <Route path="/restaurant-hub" element={<RestaurantHub />} />
+            <Route path="/cafe-hub" element={<CafeHub />} />
             <Route path="/category/community" element={<CommunityPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/neighbourhood/:slug" element={<NeighbourhoodPage />} />

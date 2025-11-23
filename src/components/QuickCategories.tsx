@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
-import { Utensils, Coffee, Map, Wine, Users } from "lucide-react";
+import { Utensils, Coffee, Users } from "lucide-react";
 
 const categories = [
-  { name: "Restaurant", icon: Utensils, slug: "restaurant" },
-  { name: "Cafes", icon: Coffee, slug: "cafes" },
-  { name: "Tour", icon: Map, slug: "tour" },
-  { name: "Drinks", icon: Wine, slug: "drinks" },
-  { name: "Community", icon: Users, slug: "community" },
+  { name: "Restaurant", icon: Utensils, slug: "restaurant", link: "/restaurant-hub" },
+  { name: "Cafes", icon: Coffee, slug: "cafes", link: "/cafe-hub" },
+  { name: "Community", icon: Users, slug: "community", link: "/category/community" },
 ];
 
 export const QuickCategories = () => {
@@ -16,7 +14,7 @@ export const QuickCategories = () => {
         {categories.map((category) => (
           <Link
             key={category.slug}
-            to={`/category/${category.slug}`}
+            to={category.link}
             className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg border border-border hover:border-secondary hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center gap-2 sm:gap-3 w-24 sm:w-28"
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-muted flex items-center justify-center">
