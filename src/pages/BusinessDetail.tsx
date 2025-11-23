@@ -20,6 +20,8 @@ import {
 import { SEO } from "@/components/SEO";
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 import { ReviewForm } from "@/components/ReviewForm";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 interface Business {
   id: string;
@@ -141,44 +143,11 @@ const BusinessDetail = () => {
         type="business.business"
         image={business.cover_image || business.images?.[0]}
       />
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <div className="font-heading font-bold text-xl leading-tight">
-                Humble Halal
-                <div className="text-xs font-normal opacity-90">Singapore Business Directory</div>
-              </div>
-            </Link>
-
-            <div className="flex-1 max-w-2xl mx-8 relative">
-              <Input
-                placeholder="Search for food, services, or areas in Singapore..."
-                className="w-full h-11 pl-4 pr-12 bg-white text-foreground border-0"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4" />
-                <span className="hidden md:inline">Singapore, Near {business.neighbourhoods?.name}</span>
-              </div>
-              <Link to="/auth">
-                <button className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <User className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header - Using main Header component for consistency */}
+      <Header />
 
       {/* Hero Image */}
-      <div className="h-[350px] w-full overflow-hidden">
+      <div className="h-[250px] sm:h-[300px] md:h-[350px] w-full overflow-hidden">
         {business.cover_image || business.images?.[0] ? (
           <img
             src={business.cover_image || business.images?.[0]}
@@ -212,8 +181,8 @@ const BusinessDetail = () => {
           <div className="space-y-6">
             {/* Business Header */}
             <div>
-              <h1 className="font-heading font-extrabold text-4xl mb-2">{business.name}</h1>
-              <div className="flex items-center gap-3 flex-wrap text-muted-foreground">
+              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl mb-2">{business.name}</h1>
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-sm sm:text-base text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold text-foreground">{(business.avg_rating || 0).toFixed(1)}</span>
@@ -244,7 +213,7 @@ const BusinessDetail = () => {
             )}
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {business.phone && (
                 <Button className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2" asChild>
                   <a href={`tel:${business.phone}`}>
@@ -401,6 +370,7 @@ const BusinessDetail = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
