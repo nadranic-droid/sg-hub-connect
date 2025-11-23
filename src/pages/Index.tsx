@@ -132,6 +132,49 @@ const Index = () => {
 
       <QuickCategories />
 
+      {/* Business Hubs Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl mb-4">
+              Explore Business Hubs
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Discover comprehensive directories for different types of Halal businesses across Singapore
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "Restaurants", slug: "restaurant-hub", icon: "🍽️", gradient: "from-primary to-accent" },
+              { name: "Cafes", slug: "cafe-hub", icon: "☕", gradient: "from-amber-500 to-orange-500" },
+              { name: "Lawyers", slug: "lawyers-hub", icon: "⚖️", gradient: "from-blue-500 to-indigo-600" },
+              { name: "Mosques", slug: "mosques-hub", icon: "🕌", gradient: "from-emerald-500 to-teal-600" },
+              { name: "Groceries", slug: "groceries-hub", icon: "🛒", gradient: "from-green-500 to-emerald-600" },
+              { name: "Healthcare", slug: "healthcare-hub", icon: "🏥", gradient: "from-red-500 to-pink-600" },
+              { name: "Education", slug: "education-hub", icon: "🎓", gradient: "from-purple-500 to-indigo-600" },
+              { name: "Beauty & Wellness", slug: "beauty-hub", icon: "✨", gradient: "from-pink-500 to-fuchsia-600" },
+            ].map((hub) => (
+              <Link key={hub.slug} to={`/${hub.slug}`}>
+                <Card className="hover-lift h-full group transition-all hover:shadow-xl border-2 hover:border-primary/50">
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${hub.gradient} flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform`}>
+                      {hub.icon}
+                    </div>
+                    <h3 className="font-heading font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                      {hub.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Browse {hub.name.toLowerCase()} →
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Featured Ad */}
       <AdSlot type="home_featured" className="my-8" showMockup={true} />
       

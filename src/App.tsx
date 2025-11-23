@@ -47,6 +47,12 @@ import Advertise from "./pages/Advertise";
 import BadgeGenerator from "./pages/BadgeGenerator";
 import RestaurantHub from "./pages/RestaurantHub";
 import CafeHub from "./pages/CafeHub";
+import LawyerHub from "./pages/LawyerHub";
+import MosqueHub from "./pages/MosqueHub";
+import GroceryHub from "./pages/GroceryHub";
+import HealthcareHub from "./pages/HealthcareHub";
+import EducationHub from "./pages/EducationHub";
+import BeautyHub from "./pages/BeautyHub";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +73,12 @@ const App = () => (
             <Route path="/business/submit" element={<BusinessSubmission />} />
             <Route path="/restaurant-hub" element={<RestaurantHub />} />
             <Route path="/cafe-hub" element={<CafeHub />} />
+            <Route path="/lawyers-hub" element={<LawyerHub />} />
+            <Route path="/mosques-hub" element={<MosqueHub />} />
+            <Route path="/groceries-hub" element={<GroceryHub />} />
+            <Route path="/healthcare-hub" element={<HealthcareHub />} />
+            <Route path="/education-hub" element={<EducationHub />} />
+            <Route path="/beauty-hub" element={<BeautyHub />} />
             <Route path="/category/community" element={<CommunityPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/neighbourhood/:slug" element={<NeighbourhoodPage />} />
