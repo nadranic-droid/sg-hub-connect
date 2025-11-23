@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { 
   Building2, MapPin, Image as ImageIcon, CheckSquare, Search, 
-  ArrowLeft, ArrowRight, Check, Upload, X 
+  ArrowLeft, ArrowRight, Check, Upload, X, Sparkles 
 } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -27,11 +27,34 @@ const steps = [
   { id: 5, name: "SEO", icon: Search }
 ];
 
-const amenities = [
-  "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
-  "Pet Friendly", "Outdoor Seating", "Delivery", "Takeaway",
-  "Credit Cards", "Reservations", "Halal", "Vegetarian Options"
-];
+// Business type specific amenities
+const amenitiesByType: Record<string, string[]> = {
+  restaurant: [
+    "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
+    "Outdoor Seating", "Delivery", "Takeaway", "Reservations",
+    "Halal", "Vegetarian Options", "Vegan Options", "Kids Menu",
+    "Private Dining", "Catering", "Alcohol-Free", "Prayer Space"
+  ],
+  cafe: [
+    "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
+    "Outdoor Seating", "Takeaway", "Pet Friendly", "Power Outlets",
+    "Halal", "Vegan Options", "Lactose-Free Options", "Study-Friendly"
+  ],
+  retail: [
+    "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
+    "Credit Cards", "Gift Wrapping", "Online Shopping", "Delivery",
+    "Returns & Exchange", "Personal Shopper", "Halal Products"
+  ],
+  services: [
+    "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
+    "Appointment Required", "Walk-ins Welcome", "Credit Cards",
+    "Online Booking", "Home Service", "Consultation Available"
+  ],
+  default: [
+    "WiFi", "Parking", "Air Conditioning", "Wheelchair Accessible",
+    "Credit Cards", "Delivery", "Halal", "Pet Friendly"
+  ]
+};
 
 const priceRanges = ["$", "$$", "$$$", "$$$$"];
 
@@ -58,6 +81,8 @@ const BusinessSubmission = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [optimizingSeo, setOptimizingSeo] = useState(false);
+  const [businessType, setBusinessType] = useState<string>("default");
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
     name: "",
@@ -116,6 +141,11 @@ const BusinessSubmission = () => {
     }));
   };
 
+  // Get amenities based on selected business type
+  const getAmenitiesForBusinessType = () => {
+    return amenitiesByType[businessType] || amenitiesByType.default;
+  };
+
   const handleFileChange = (field: string, files: FileList | null) => {
     if (!files) return;
     
@@ -162,6 +192,46 @@ const BusinessSubmission = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  const handleOptimizeSeo = async () => {
+    if (!formData.name) {
+      toast.error("Please enter a business name first");
+      return;
+    }
+
+    setOptimizingSeo(true);
+    try {
+      // Prepare comprehensive business context for AI
+      const businessContext = {
+        businessName: formData.name,
+        description: formData.description || formData.short_description || '',
+        category: formData.category_id || '',
+        location: formData.address || formData.postal_code || 'Singapore'
+      };
+
+      const { data, error } = await supabase.functions.invoke('optimize-seo', {
+        body: businessContext
+      });
+
+      if (error) throw error;
+
+      if (data?.title && data?.description) {
+        setFormData(prev => ({
+          ...prev,
+          seo_title: data.title,
+          seo_description: data.description
+        }));
+        toast.success("SEO optimized with AI! Review and edit as needed.");
+      } else {
+        throw new Error("Invalid response from AI");
+      }
+    } catch (error: any) {
+      console.error("SEO optimization error:", error);
+      toast.error("Failed to optimize SEO. Please try again or write manually.");
+    } finally {
+      setOptimizingSeo(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
@@ -193,41 +263,6 @@ const BusinessSubmission = () => {
         }
       }
 
-      // Extract city from address or use a default
-      // This is a simple implementation - you may want to use a geocoding service
-      const cityName = extractCityFromAddress(formData.address) || "Singapore";
-      const citySlug = cityName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
-      // Check if city exists, create if it doesn't
-      let cityId: string | null = null;
-      const { data: existingCity } = await (supabase as any)
-        .from("cities")
-        .select("id")
-        .eq("slug", citySlug)
-        .maybeSingle();
-
-      if (existingCity) {
-        cityId = existingCity.id;
-      } else {
-        // Create new city (hidden until approved)
-        const { data: newCity, error: cityError } = await (supabase as any)
-          .from("cities")
-          .insert({
-            name: cityName,
-            slug: citySlug,
-            state_id: null, // Will be set later or use default Singapore state
-            is_public: false, // Hidden until approved
-            created_from_submission: true,
-            description: `Discover halal businesses in ${cityName}`,
-          })
-          .select()
-          .single();
-
-        if (!cityError && newCity) {
-          cityId = newCity.id;
-        }
-      }
-
       const businessData = {
         name: formData.name,
         slug,
@@ -249,9 +284,12 @@ const BusinessSubmission = () => {
         seo_description: formData.seo_description || formData.short_description,
         seo_keywords: formData.seo_keywords,
         owner_id: user?.id || null, // Allow null for guest submissions
-        city_id: cityId,
+        category_id: formData.category_id || null,
+        subcategory_id: formData.subcategory_id || null,
+        neighbourhood_id: formData.neighbourhood_id || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         status: "pending",
-        submitted_by_email: formData.email, // Track submitter email
       };
 
       const { data: insertedData, error } = await supabase
@@ -394,6 +432,22 @@ const BusinessSubmission = () => {
                       placeholder="Your Business Name"
                       className="mt-2"
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="businessType">Business Type *</Label>
+                    <Select value={businessType} onValueChange={setBusinessType}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Select business type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="restaurant">Restaurant / Food & Beverage</SelectItem>
+                        <SelectItem value="cafe">Café / Coffee Shop</SelectItem>
+                        <SelectItem value="retail">Retail / Shop</SelectItem>
+                        <SelectItem value="services">Services / Professional</SelectItem>
+                        <SelectItem value="default">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -630,15 +684,21 @@ const BusinessSubmission = () => {
 
                   <div>
                     <Label>Amenities</Label>
-                    <div className="grid md:grid-cols-3 gap-4 mt-2">
-                      {amenities.map((amenity) => (
-                        <div key={amenity} className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground mb-3 mt-1">
+                      Select amenities based on your {businessType === 'default' ? 'business' : businessType} type
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {getAmenitiesForBusinessType().map((amenity) => (
+                        <div key={amenity} className="flex items-center space-x-2">
                           <Checkbox
                             id={amenity}
                             checked={formData.amenities.includes(amenity)}
                             onCheckedChange={() => handleAmenityToggle(amenity)}
                           />
-                          <Label htmlFor={amenity} className="cursor-pointer font-normal">
+                          <Label
+                            htmlFor={amenity}
+                            className="text-sm font-normal cursor-pointer"
+                          >
                             {amenity}
                           </Label>
                         </div>
@@ -652,18 +712,29 @@ const BusinessSubmission = () => {
             {/* Step 5: SEO */}
             {currentStep === 5 && (
               <div className="space-y-6">
-                <div>
-                  <CardTitle className="text-2xl mb-2">SEO Settings</CardTitle>
-                  <CardDescription>Optimize your listing for search engines</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl mb-2">SEO Settings</CardTitle>
+                    <CardDescription>Optimize your listing for search engines</CardDescription>
+                  </div>
+                  <Button
+                    onClick={handleOptimizeSeo}
+                    disabled={optimizingSeo || !formData.name}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {optimizingSeo ? "Optimizing..." : "Optimize with AI"}
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="seo_title">SEO Title</Label>
+                    <Label htmlFor="seo_title">SEO Title (max 60 characters)</Label>
                     <Input
                       id="seo_title"
                       value={formData.seo_title}
-                      onChange={(e) => handleInputChange("seo_title", e.target.value)}
+                      onChange={(e) => handleInputChange("seo_title", e.target.value.slice(0, 60))}
                       placeholder={formData.name || "Your Business Name"}
                       maxLength={60}
                       className="mt-2"
@@ -674,11 +745,11 @@ const BusinessSubmission = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="seo_description">SEO Description</Label>
+                    <Label htmlFor="seo_description">SEO Description (max 160 characters)</Label>
                     <Textarea
                       id="seo_description"
                       value={formData.seo_description}
-                      onChange={(e) => handleInputChange("seo_description", e.target.value)}
+                      onChange={(e) => handleInputChange("seo_description", e.target.value.slice(0, 160))}
                       placeholder={formData.short_description || "Brief description of your business..."}
                       maxLength={160}
                       rows={3}
