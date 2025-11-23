@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Search, Building2, MapPin, Filter } from "lucide-react";
+import { Check, Search, Building2, MapPin, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
@@ -25,12 +23,12 @@ const ClaimBusiness = () => {
   const [filteredBusinesses, setFilteredBusinesses] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [open, setOpen] = useState(false);
   const [value, setValue] = useState(preSelectedBusinessId || "");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     contactName: "",
     email: "",
@@ -223,68 +221,116 @@ const ClaimBusiness = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label>Select Business</Label>
-                    <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-full justify-between"
-                        >
-                        {value
-                            ? filteredBusinesses.find((b) => b.id === value)?.name || businesses.find((b) => b.id === value)?.name
-                            : "Search for your business..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-                        <Command>
-                        <CommandInput placeholder="Search business name..." value={searchTerm} onValueChange={setSearchTerm} />
-                        <CommandList>
-                            <CommandEmpty>No unclaimed business found.</CommandEmpty>
-                            <CommandGroup>
-                            {filteredBusinesses.map((business) => (
-                                <CommandItem
-                                key={business.id}
-                                value={business.id}
-                                keywords={[business.name, business.address, business.cities?.name, business.categories?.name]}
-                                onSelect={(currentValue) => {
-                                    setValue(currentValue === value ? "" : currentValue);
-                                    setOpen(false);
-                                }}
-                                >
-                                <Check
-                                    className={cn(
-                                    "mr-2 h-4 w-4",
-                                    value === business.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                />
-                                <div className="flex flex-col flex-1 min-w-0">
-                                    <span className="font-medium truncate">{business.name}</span>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      {business.cities?.name && (
-                                        <>
-                                          <MapPin className="w-3 h-3" />
-                                          <span>{business.cities.name}</span>
-                                        </>
-                                      )}
-                                      {business.categories?.name && (
-                                        <>
-                                          <span>•</span>
-                                          <span>{business.categories.name}</span>
-                                        </>
-                                      )}
-                                    </div>
-                                    <span className="text-xs text-muted-foreground truncate">{business.address}</span>
+                    <Label>Search & Select Your Business</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                      <Input
+                        placeholder="Start typing your business name..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          if (!open && e.target.value) {
+                            setOpen(true);
+                          }
+                        }}
+                        onFocus={() => {
+                          if (searchTerm || filteredBusinesses.length > 0) {
+                            setOpen(true);
+                          }
+                        }}
+                        className="pl-9"
+                      />
+                    </div>
+                    
+                    {searchTerm && filteredBusinesses.length > 0 && (
+                      <div className="border rounded-lg mt-2 max-h-[300px] overflow-y-auto bg-white shadow-lg">
+                        {filteredBusinesses.slice(0, 10).map((business) => (
+                          <button
+                            key={business.id}
+                            type="button"
+                            onClick={() => {
+                              setValue(business.id);
+                              setSearchTerm(business.name);
+                              setOpen(false);
+                            }}
+                            className={cn(
+                              "w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0",
+                              value === business.id && "bg-primary/10"
+                            )}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Check
+                                className={cn(
+                                  "mt-0.5 h-4 w-4 shrink-0",
+                                  value === business.id ? "opacity-100 text-primary" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-foreground">{business.name}</div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  {business.cities?.name && (
+                                    <>
+                                      <MapPin className="w-3 h-3" />
+                                      <span>{business.cities.name}</span>
+                                    </>
+                                  )}
+                                  {business.categories?.name && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{business.categories.name}</span>
+                                    </>
+                                  )}
                                 </div>
-                                </CommandItem>
-                            ))}
-                            </CommandGroup>
-                        </CommandList>
-                        </Command>
-                    </PopoverContent>
-                    </Popover>
+                                {business.address && (
+                                  <div className="text-xs text-muted-foreground mt-1 truncate">{business.address}</div>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        {filteredBusinesses.length > 10 && (
+                          <div className="px-4 py-2 text-xs text-muted-foreground text-center border-t bg-muted/50">
+                            Showing first 10 of {filteredBusinesses.length} results. Refine your search for more.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {searchTerm && filteredBusinesses.length === 0 && (
+                      <div className="border rounded-lg mt-2 p-4 text-center text-sm text-muted-foreground bg-muted/50">
+                        No businesses found matching "{searchTerm}". 
+                        <Link to="/business/submit" className="text-primary hover:underline ml-1">Create a new listing</Link>
+                      </div>
+                    )}
+                    
+                    {value && (
+                      <div className="mt-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="font-semibold text-foreground">
+                              {filteredBusinesses.find((b) => b.id === value)?.name || businesses.find((b) => b.id === value)?.name}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              Selected for claim request
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setValue("");
+                              setSearchTerm("");
+                            }}
+                            className="shrink-0"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-muted-foreground">
                         Can't find your business? <Link to="/business/submit" className="text-primary hover:underline">Create a new listing</Link>.
                     </p>

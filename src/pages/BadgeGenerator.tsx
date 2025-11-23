@@ -27,8 +27,11 @@ import {
   Link as LinkIcon,
   AlertCircle,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  Badge as BadgeIcon
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -188,62 +191,140 @@ Email: ${formData.email}`;
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/10 to-background py-16 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <Badge className="mb-6 bg-primary/10 text-primary border-primary/20">
+      <section className="bg-gradient-to-br from-primary via-primary/90 to-accent py-20 border-b border-border relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <Badge className="mb-6 bg-white/20 text-white border-white/30 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 mr-2" />
-              Free Month Offer
+              LIMITED TIME OFFER
             </Badge>
-            <h1 className="font-heading font-bold text-4xl md:text-5xl mb-4">
-              Free Badge Generator - Get One Month Free
+            <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-6">
+              Get <span className="text-yellow-300">1 Month FREE</span> Featured Listing!
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Add our badge to your website and receive one FREE month of featured listing (worth $29)
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Add our "Humble Halal Directory" badge to your website and receive one FREE month of featured listing (worth $29). 
+              Generate your custom badge in seconds!
             </p>
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 gap-2 shadow-xl" asChild>
+              <Link to="#generator">
+                <Sparkles className="w-5 h-5" />
+                Generate Badge & Get $29 Off
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-16">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="font-heading font-bold text-3xl mb-8 text-center">How It Works</h2>
-            <div className="grid md:grid-cols-4 gap-6 mb-12">
-              {[
-                { step: "1", title: "Generate Your Badge", desc: "Select your city and copy the badge code" },
-                { step: "2", title: "Add to Your Website", desc: "Paste the HTML code into your website" },
-                { step: "3", title: "Notify Us", desc: "Send us an email using the template below" },
-                { step: "4", title: "Receive Your Coupon", desc: "We'll email you a coupon code within 24-48 hours" },
-              ].map((item) => (
-                <Card key={item.step}>
-                  <CardContent className="p-6 text-center">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl font-bold text-primary">{item.step}</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="font-heading font-bold text-3xl md:text-4xl mb-4">
+                How to Claim Your Free Month of Featured Listings
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Follow these simple steps to get your free month:
+              </p>
             </div>
+            
+            <Card className="bg-blue-50/50 border-blue-200 mb-8">
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {[
+                    { 
+                      step: "1", 
+                      title: "Create Your Account", 
+                      desc: "Sign up for a free account to manage your listing.",
+                      link: { text: "Sign Up Here", href: "/auth" }
+                    },
+                    { 
+                      step: "2", 
+                      title: "Add or Claim Your Listing", 
+                      desc: "Either add your store if it's not listed yet, or claim your existing listing.",
+                      link: { text: "Add Your Store", href: "/business/submit" },
+                      link2: { text: "Claim Existing Listing", href: "/claim-business" }
+                    },
+                    { 
+                      step: "3", 
+                      title: "Generate & Add Badge to Your Website", 
+                      desc: "Use the generator below to create your custom badge and add it to your website."
+                    },
+                    { 
+                      step: "4", 
+                      title: "Login & Upgrade to Featured", 
+                      desc: "After adding the badge, login to your account and click 'Upgrade to Featured'.",
+                      link: { text: "Login to Dashboard", href: "/dashboard" }
+                    },
+                    { 
+                      step: "5", 
+                      title: "Choose 1 Month Option & Enter Code", 
+                      desc: "Select the 1 month featured listing option and enter your unique discount code."
+                    },
+                  ].map((item) => (
+                    <div key={item.step} className="flex gap-4">
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                        {item.step}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-1">{item.title}</h3>
+                        <p className="text-muted-foreground mb-2">{item.desc}</p>
+                        {item.link && (
+                          <div className="flex flex-wrap gap-2">
+                            <Link to={item.link.href} className="text-primary hover:underline text-sm font-medium">
+                              {item.link.text} →
+                            </Link>
+                            {item.link2 && (
+                              <Link to={item.link2.href} className="text-primary hover:underline text-sm font-medium">
+                                {item.link2.text} →
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-900">
+                    <strong>Note:</strong> Email us at{" "}
+                    <a href="mailto:support@humblehalal.com" className="text-primary hover:underline font-medium">
+                      support@humblehalal.com
+                    </a>{" "}
+                    with your website URL after adding the badge. We'll send your discount code within 24 hours!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Badge Generator Tool */}
-      <section className="py-16 bg-muted/50">
+      <section id="generator" className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <Card>
+            <Card className="border-2 border-primary/20">
               <CardHeader>
-                <CardTitle>Step 1: Generate Your Badge</CardTitle>
-                <CardDescription>Select your store's city from the dropdown below</CardDescription>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xl font-bold text-primary">1</span>
+                  </div>
+                  <CardTitle className="text-2xl">Enter Your Store Location</CardTitle>
+                </div>
+                <CardDescription className="text-base">
+                  Just type your city and state, and we'll automatically generate the badge that links to your local directory page!
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="city">Select Your Store's City</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-base font-semibold">Search for your city and state:</Label>
                   <Select
                     value={selectedCity?.id || ""}
                     onValueChange={(value) => {
@@ -251,8 +332,8 @@ Email: ${formData.email}`;
                       setSelectedCity(city);
                     }}
                   >
-                    <SelectTrigger id="city" className="mt-2">
-                      <SelectValue placeholder="Choose a city..." />
+                    <SelectTrigger id="city" className="mt-2 h-12 text-base">
+                      <SelectValue placeholder="e.g., Los Angeles, CA or Miami, FL or New York, NY..." />
                     </SelectTrigger>
                     <SelectContent>
                       {cities?.map((city: any) => (
@@ -262,6 +343,9 @@ Email: ${formData.email}`;
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Start typing to search for your city
+                  </p>
                 </div>
 
                 {selectedCity && badgeCode && (
@@ -321,8 +405,111 @@ Email: ${formData.email}`;
         </div>
       </section>
 
-      {/* Alternative Text Link Option */}
+      {/* Why Add Our Badge */}
+      <section className="py-16 bg-gradient-to-br from-green-50 to-emerald-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl mb-8 text-center">Why Add Our Badge?</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="border-2 border-green-200 bg-white">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Build Trust</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Show customers you're listed on a trusted directory
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-green-200 bg-white">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Get More Visibility</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Drive traffic from thousands of people shopping for halal businesses each month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-green-200 bg-white">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <BadgeIcon className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">1 Month FREE</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Featured listing worth $29 - absolutely free!
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* See How It Works */}
       <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl mb-8 text-center">See How It Works</h2>
+            <Card className="border-2">
+              <CardContent className="p-8">
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                        1
+                      </div>
+                      <h3 className="font-bold text-lg">Add Badge to Your Site</h3>
+                    </div>
+                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 bg-muted/20">
+                      <div className="text-xs text-muted-foreground mb-2">Your Website</div>
+                      <div className="bg-white rounded p-4 shadow-sm">
+                        <div className="h-32 bg-muted/50 rounded mb-4"></div>
+                        <div className="text-xs text-center text-muted-foreground py-2 border-t-2 border-primary">
+                          Badge Here!
+                        </div>
+                        <div className="mt-2 text-center">
+                          <Badge className="bg-primary text-white">HUMBLE HALAL</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <ArrowRight className="w-8 h-8 text-muted-foreground hidden md:block" />
+                  </div>
+                  <div className="space-y-4 md:col-start-1 md:row-start-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                        2
+                      </div>
+                      <h3 className="font-bold text-lg">Customer Finds Your Store</h3>
+                    </div>
+                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 bg-muted/20">
+                      <div className="text-xs text-muted-foreground mb-2">Your Store!</div>
+                      <div className="bg-white rounded p-4 shadow-sm">
+                        <div className="text-sm font-semibold mb-2">Your Business Name</div>
+                        <div className="text-xs text-muted-foreground mb-4">Address, Phone, etc.</div>
+                        <div className="h-24 bg-muted/50 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    <strong>The Result:</strong> Customers see you're on a trusted directory, click the badge, find your store details, and contact you!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Alternative Text Link Option */}
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <Card>

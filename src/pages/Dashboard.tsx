@@ -227,6 +227,44 @@ const Dashboard = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Badge Claim Banner */}
+            <Card className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/20 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                      <BadgeIcon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-heading font-bold text-xl mb-1">Get 1 Month FREE Featured Listing!</h3>
+                      <p className="text-muted-foreground text-sm mb-2">
+                        Add our badge to your website and receive one FREE month of featured listing (worth $29). 
+                        Generate your custom badge in seconds!
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-success" />
+                          No credit card required
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-success" />
+                          Coupon code within 24-48 hours
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button asChild className="gap-2 shrink-0">
+                    <Link to="/badge-generator">
+                      <Sparkles className="w-4 h-4" />
+                      Generate Badge & Get $29 Off
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Quick Stats */}
             <div className="grid md:grid-cols-4 gap-6">
               <Card className="hover-lift border-l-4 border-l-primary shadow-md bg-gradient-to-br from-background to-primary/5">
