@@ -1,8 +1,8 @@
 import { Search, MapPin } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SearchAutocomplete } from "./SearchAutocomplete";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -48,21 +48,19 @@ export const HeroSection = () => {
         {/* Split Search Bar */}
         <form onSubmit={handleSearch} className="bg-white rounded-xl p-2 sm:p-3 flex flex-col md:flex-row gap-2 max-w-3xl shadow-2xl">
           <div className="flex items-center flex-1 px-3 sm:px-4 border-r-0 md:border-r border-b md:border-b-0 border-border pb-2 md:pb-0">
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground mr-2 sm:mr-3 shrink-0" />
-            <Input
-              placeholder="What are you looking for?"
+            <SearchAutocomplete
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-0 h-10 sm:h-12 text-foreground text-sm sm:text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+              onChange={setSearchQuery}
+              placeholder="What are you looking for?"
+              type="business"
             />
           </div>
           <div className="flex items-center flex-1 px-3 sm:px-4 border-r-0 md:border-r border-b md:border-b-0 border-border pb-2 md:pb-0">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground mr-2 sm:mr-3 shrink-0" />
-            <Input
-              placeholder="Where?"
+            <SearchAutocomplete
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="border-0 h-10 sm:h-12 text-foreground text-sm sm:text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+              onChange={setLocation}
+              placeholder="Where?"
+              type="location"
             />
           </div>
           <Button type="submit" className="bg-primary hover:bg-primary-dark text-white font-semibold h-10 sm:h-12 px-6 sm:px-8 shrink-0 text-sm sm:text-base w-full md:w-auto">

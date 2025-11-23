@@ -114,13 +114,43 @@ const Index = () => {
     fetchPopularBusinesses();
   }, [nearestNeighbourhood]); // Re-fetch when neighbourhood changes
 
+  // Generate homepage category schema
+  const homepageCategorySchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Business Categories",
+    description: "Explore businesses by category on Humble Halal",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, item: { "@type": "Category", name: "Restaurants", url: "https://humblehalal.sg/restaurant-hub" } },
+      { "@type": "ListItem", position: 2, item: { "@type": "Category", name: "Cafes", url: "https://humblehalal.sg/cafe-hub" } },
+      { "@type": "ListItem", position: 3, item: { "@type": "Category", name: "Lawyers", url: "https://humblehalal.sg/lawyers-hub" } },
+      { "@type": "ListItem", position: 4, item: { "@type": "Category", name: "Mosques", url: "https://humblehalal.sg/mosques-hub" } },
+      { "@type": "ListItem", position: 5, item: { "@type": "Category", name: "Groceries", url: "https://humblehalal.sg/groceries-hub" } },
+      { "@type": "ListItem", position: 6, item: { "@type": "Category", name: "Healthcare", url: "https://humblehalal.sg/healthcare-hub" } },
+      { "@type": "ListItem", position: 7, item: { "@type": "Category", name: "Education", url: "https://humblehalal.sg/education-hub" } },
+      { "@type": "ListItem", position: 8, item: { "@type": "Category", name: "Beauty & Wellness", url: "https://humblehalal.sg/beauty-hub" } },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <SEO
         title="Humble Halal - Discover Halal Businesses in Singapore"
         description="Singapore's trusted guide to verified Halal businesses. Find restaurants, groceries, services and more with MUIS certification and Muslim-owned establishments."
-        keywords={["halal singapore", "halal food", "muslim businesses", "muis certified", "halal restaurants", "singapore halal"]}
-        schema={[organizationSchema, websiteSchema] as any}
+        keywords={[
+          "halal singapore",
+          "halal food singapore",
+          "muslim businesses singapore",
+          "muis certified singapore",
+          "halal restaurants singapore",
+          "singapore halal directory",
+          "halal cafes singapore",
+          "halal services singapore",
+          "muslim owned businesses",
+          "halal certified singapore"
+        ]}
+        schema={[organizationSchema, websiteSchema, homepageCategorySchema] as any}
+        url="https://humblehalal.sg"
       />
       <Header />
       <HeroSection />
