@@ -206,20 +206,27 @@ const AdminBusinesses = () => {
         try {
           // Pre-fetch all categories and neighbourhoods to reduce queries
           const [categoriesResult, neighbourhoodsResult] = await Promise.all([
-            supabase.from("categories").select("id, slug"),
-            supabase.from("neighbourhoods").select("id, slug"),
+            supabase.from("categories").select("id, slug, name"),
+            supabase.from("neighbourhoods").select("id, slug, name"),
           ]);
 
           if (categoriesResult.error || neighbourhoodsResult.error) {
             throw new Error("Failed to fetch categories or neighbourhoods");
           }
 
-          // Create lookup maps
-          const categoryMap = new Map(
+          // Create lookup maps (slug -> id and name -> id)
+          const categorySlugMap = new Map(
             categoriesResult.data?.map((cat) => [cat.slug, cat.id]) || []
           );
-          const neighbourhoodMap = new Map(
+          const categoryNameMap = new Map(
+            categoriesResult.data?.map((cat) => [cat.name.toLowerCase(), cat.id]) || []
+          );
+
+          const neighbourhoodSlugMap = new Map(
             neighbourhoodsResult.data?.map((hood) => [hood.slug, hood.id]) || []
+          );
+          const neighbourhoodNameMap = new Map(
+            neighbourhoodsResult.data?.map((hood) => [hood.name.toLowerCase(), hood.id]) || []
           );
 
           // Process in batches
@@ -237,12 +244,19 @@ const AdminBusinesses = () => {
             const batchData = batch.map((row, batchIdx) => {
               const rowNumber = i + batchIdx + 2; // +2 because CSV row 1 is header, and we're 0-indexed
               try {
-                const categoryId = row.category_slug
-                  ? categoryMap.get(row.category_slug) || null
-                  : null;
-                const neighbourhoodId = row.neighbourhood_slug
-                  ? neighbourhoodMap.get(row.neighbourhood_slug) || null
-                  : null;
+                // Try to match category by slug first, then by name
+                let categoryId = null;
+                if (row.category_slug) {
+                   categoryId = categorySlugMap.get(row.category_slug) || 
+                                categoryNameMap.get(row.category_slug.toLowerCase()) || null;
+                }
+
+                // Try to match neighbourhood by slug first, then by name
+                let neighbourhoodId = null;
+                if (row.neighbourhood_slug) {
+                    neighbourhoodId = neighbourhoodSlugMap.get(row.neighbourhood_slug) ||
+                                      neighbourhoodNameMap.get(row.neighbourhood_slug.toLowerCase()) || null;
+                }
 
                 return {
                   name: row.name?.trim(),
