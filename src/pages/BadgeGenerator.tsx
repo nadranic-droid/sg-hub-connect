@@ -319,12 +319,12 @@ Email: ${formData.email}`;
                   <CardTitle className="text-2xl">Enter Your Store Location</CardTitle>
                 </div>
                 <CardDescription className="text-base">
-                  Just type your city and state, and we'll automatically generate the badge that links to your local directory page!
+                  Select your district and neighbourhood in Singapore, and we'll automatically generate the badge that links to your local directory page!
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="text-base font-semibold">Search for your city and state:</Label>
+                  <Label htmlFor="city" className="text-base font-semibold">Search for your district and neighbourhood:</Label>
                   <Select
                     value={selectedCity?.id || ""}
                     onValueChange={(value) => {
@@ -333,18 +333,18 @@ Email: ${formData.email}`;
                     }}
                   >
                     <SelectTrigger id="city" className="mt-2 h-12 text-base">
-                      <SelectValue placeholder="e.g., Los Angeles, CA or Miami, FL or New York, NY..." />
+                      <SelectValue placeholder="e.g., Little India, Central or Orchard, Central or Marina Bay, Central..." />
                     </SelectTrigger>
                     <SelectContent>
                       {cities?.map((city: any) => (
                         <SelectItem key={city.id} value={city.id}>
-                          {city.name}, {city.states?.code || city.states?.name || ""}
+                          {city.name}, {city.states?.name || city.states?.code || ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground">
-                    Start typing to search for your city
+                    Start typing to search for your district in Singapore
                   </p>
                 </div>
 

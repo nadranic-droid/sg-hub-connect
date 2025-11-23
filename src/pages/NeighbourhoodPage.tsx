@@ -151,8 +151,36 @@ const NeighbourhoodPage = () => {
       <Header />
 
       {/* Neighbourhood Header */}
-      <section className="bg-muted/50 border-b border-border py-8">
-        <div className="container mx-auto px-4">
+      <section className="relative border-b border-border py-8 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          {neighbourhood.image ? (
+            <img
+              src={neighbourhood.image}
+              alt={`${neighbourhood.name}, ${neighbourhood.region}`}
+              className="w-full h-full object-cover opacity-15"
+              onError={(e) => {
+                // Fallback to gradient if image fails
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          ) : (
+            // Use Singapore-themed fallback image or gradient
+            <div 
+              className="w-full h-full bg-cover bg-center opacity-20"
+              style={{
+                backgroundImage: `url(https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&h=400&fit=crop&q=80)`,
+              }}
+            />
+          )}
+          {/* Gradient overlay for better text readability - stronger overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background/85" />
+          {/* Additional subtle pattern overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(15,118,110,0.05),transparent_50%)]" />
+        </div>
+        
+        {/* Content */}
+        <div className="container mx-auto px-4 relative z-10">
           <nav className="text-sm text-muted-foreground mb-4">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <span className="mx-2">/</span>
@@ -164,7 +192,7 @@ const NeighbourhoodPage = () => {
             <MapPin className="w-5 h-5" />
             <span>{neighbourhood.region}</span>
           </div>
-          <h1 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
+          <h1 className="font-heading font-extrabold text-4xl md:text-5xl mb-4 text-foreground">
             Halal Businesses in {neighbourhood.name}, {neighbourhood.region}
           </h1>
           
