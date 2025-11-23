@@ -17,14 +17,18 @@ interface Article {
   slug: string;
   content: string;
   excerpt?: string;
-  cover_image?: string;
+  featured_image?: string;
   author_id?: string;
   published_at?: string;
   created_at?: string;
+  updated_at?: string;
   views_count?: number;
   category?: string;
   tags?: string[];
   is_published?: boolean;
+  is_featured?: boolean;
+  seo_title?: string;
+  seo_description?: string;
 }
 
 const ArticleDetail = () => {
@@ -114,7 +118,7 @@ const ArticleDetail = () => {
         keywords={article.tags || []}
         image={article.featured_image}
         type="article"
-        schema={[articleSchema, breadcrumbSchema]}
+        schema={[articleSchema, breadcrumbSchema] as any}
       />
       <Header />
 

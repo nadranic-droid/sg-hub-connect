@@ -86,11 +86,7 @@ export const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <div className="w-10 h-10 rounded-full bg-muted border-2 border-border overflow-hidden hover:border-primary transition-colors cursor-pointer flex items-center justify-center">
-                    {user.user_metadata?.avatar_url ? (
-                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-5 h-5 text-muted-foreground" />
-                    )}
+                    <User className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

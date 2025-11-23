@@ -153,12 +153,10 @@ Email: ${formData.email}`;
         .insert([
           {
             business_name: formData.businessName,
-            email: formData.email,
-            phone: formData.phone || null,
-            website_url: formData.websiteUrl,
-            city: selectedCity?.name || "",
-            state: selectedCity?.states?.name || "",
-            badge_location: formData.badgeLocation,
+            business_address: `${selectedCity?.name}, ${selectedCity?.states?.name || ""}`,
+            contact_email: formData.email,
+            contact_phone: formData.phone || null,
+            badge_type: "standard",
             status: "pending",
           },
         ])

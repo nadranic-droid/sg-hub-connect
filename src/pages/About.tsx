@@ -37,7 +37,7 @@ const About = () => {
         title="About Us - Humble Halal | Singapore's Trusted Halal Business Directory"
         description="Learn about Humble Halal, Singapore's comprehensive directory of verified Halal businesses. Discover our mission to connect the Muslim community with quality MUIS-certified and Muslim-owned establishments across Singapore."
         keywords={["about humble halal", "halal directory singapore", "muis certified", "muslim businesses singapore"]}
-        schema={[organizationSchema, websiteSchema]}
+        schema={[organizationSchema, websiteSchema] as any}
       />
       <Header />
 

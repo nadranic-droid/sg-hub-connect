@@ -14,10 +14,11 @@ interface Article {
   title: string;
   slug: string;
   excerpt?: string;
-  cover_image?: string;
+  featured_image?: string;
   published_at?: string;
   category?: string;
   tags?: string[];
+  is_featured?: boolean;
 }
 
 const Articles = () => {
@@ -65,7 +66,7 @@ const Articles = () => {
         title="Halal Lifestyle & Dining Articles - Humble Halal Blog"
         description="Expert guides on Halal dining, Muslim lifestyle, Ramadan, and Singapore business spotlights. Stay updated with the latest in Singapore's Halal scene."
         keywords={["halal articles", "muslim lifestyle", "halal food guide", "singapore muslim", "ramadan guide"]}
-        schema={[breadcrumbSchema, collectionSchema]}
+        schema={[breadcrumbSchema, collectionSchema] as any}
       />
       <Header />
 

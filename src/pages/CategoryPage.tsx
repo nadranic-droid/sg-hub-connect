@@ -97,7 +97,7 @@ const CategoryPage = () => {
         title={seoTitle}
         description={seoDescription}
         keywords={[category.name, "halal", "singapore", "muis certified", "muslim owned"]}
-        schema={[breadcrumbSchema, collectionSchema]}
+        schema={[breadcrumbSchema, collectionSchema] as any}
       />
       <Header />
 

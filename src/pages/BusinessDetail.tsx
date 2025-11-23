@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
   Star,
   Phone,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
+import { ReviewForm } from "@/components/ReviewForm";
 
 interface Business {
   id: string;
@@ -39,6 +41,11 @@ interface Business {
   operating_hours?: Record<string, unknown>;
   latitude?: number;
   longitude?: number;
+  is_verified?: boolean;
+  is_claimed?: boolean;
+  postal_code?: string;
+  seo_title?: string;
+  seo_description?: string;
 }
 
 const BusinessDetail = () => {
@@ -59,7 +66,7 @@ const BusinessDetail = () => {
         .eq("slug", slug)
         .maybeSingle();
 
-      setBusiness(data);
+      setBusiness(data as Business);
       setLoading(false);
     };
 
@@ -102,9 +109,9 @@ const BusinessDetail = () => {
     rating: business.avg_rating,
     reviewCount: business.review_count,
     priceRange: business.price_range,
-    latitude: business.latitude ? parseFloat(business.latitude) : undefined,
-    longitude: business.longitude ? parseFloat(business.longitude) : undefined,
-    isVerified: business.is_verified
+    latitude: business.latitude ? parseFloat(String(business.latitude)) : undefined,
+    longitude: business.longitude ? parseFloat(String(business.longitude)) : undefined,
+    isVerified: business.is_verified || false
   });
 
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -130,7 +137,7 @@ const BusinessDetail = () => {
           "singapore",
           business.is_verified ? "muis certified" : "muslim owned"
         ]}
-        schema={[breadcrumbSchema, localBusinessSchema]}
+        schema={[breadcrumbSchema, localBusinessSchema] as any}
         type="business.business"
         image={business.cover_image || business.images?.[0]}
       />

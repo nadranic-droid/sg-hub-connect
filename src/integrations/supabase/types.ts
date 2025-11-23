@@ -159,6 +159,53 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_requests: {
+        Row: {
+          badge_type: string
+          business_address: string
+          business_id: string | null
+          business_name: string
+          contact_email: string
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          badge_type: string
+          business_address: string
+          business_id?: string | null
+          business_name: string
+          contact_email: string
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          badge_type?: string
+          business_address?: string
+          business_id?: string | null
+          business_name?: string
+          contact_email?: string
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address: string
@@ -169,6 +216,7 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          featured_expires_at: string | null
           id: string
           images: string[] | null
           is_claimed: boolean | null
@@ -206,6 +254,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          featured_expires_at?: string | null
           id?: string
           images?: string[] | null
           is_claimed?: boolean | null
@@ -243,6 +292,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          featured_expires_at?: string | null
           id?: string
           images?: string[] | null
           is_claimed?: boolean | null

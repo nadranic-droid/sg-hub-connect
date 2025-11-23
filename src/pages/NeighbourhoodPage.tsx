@@ -116,7 +116,7 @@ const NeighbourhoodPage = () => {
         title={seoTitle}
         description={seoDescription}
         keywords={[neighbourhood.name, neighbourhood.region, "halal", "singapore", "muslim businesses"]}
-        schema={[breadcrumbSchema, collectionSchema]}
+        schema={[breadcrumbSchema, collectionSchema] as any}
       />
       {/* Header */}
       <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">

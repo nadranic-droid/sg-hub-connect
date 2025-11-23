@@ -27,8 +27,8 @@ const ExplorePage = () => {
         .from("businesses")
         .select(`
           *,
-          categories!inner(name, slug),
-          neighbourhoods!inner(name, slug, region)
+          categories!businesses_category_id_fkey(name, slug),
+          neighbourhoods!businesses_neighbourhood_id_fkey(name, slug, region)
         `)
         .eq("status", "approved")
         .eq("neighbourhoods.slug", neighbourhood);

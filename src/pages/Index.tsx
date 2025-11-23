@@ -120,7 +120,7 @@ const Index = () => {
         title="Humble Halal - Discover Halal Businesses in Singapore"
         description="Singapore's trusted guide to verified Halal businesses. Find restaurants, groceries, services and more with MUIS certification and Muslim-owned establishments."
         keywords={["halal singapore", "halal food", "muslim businesses", "muis certified", "halal restaurants", "singapore halal"]}
-        schema={[organizationSchema, websiteSchema]}
+        schema={[organizationSchema, websiteSchema] as any}
       />
       <Header />
       <HeroSection />
