@@ -66,10 +66,10 @@ const App = () => (
             <Route path="/category/community" element={<CommunityPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/neighbourhood/:slug" element={<NeighbourhoodPage />} />
-            <Route path="/:stateSlug/:citySlug" element={<CityPage />} />
-            <Route path="/:citySlug" element={<CityPage />} />
             <Route path="/business/:slug" element={<BusinessDetail />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/:stateSlug/:citySlug" element={<CityPage />} />
+            <Route path="/:citySlug" element={<CityPage />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/articles/:slug" element={<ArticleDetail />} />
             <Route path="/events" element={<Events />} />
