@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { 
   Building2, MapPin, Image as ImageIcon, CheckSquare, Search, 
-  ArrowLeft, ArrowRight, Check, Upload, X 
+  ArrowLeft, ArrowRight, Check, Upload, X, Sparkles 
 } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -58,6 +58,7 @@ const BusinessSubmission = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [optimizingSeo, setOptimizingSeo] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
     name: "",
@@ -160,6 +161,43 @@ const BusinessSubmission = () => {
 
   const handleBack = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleOptimizeSeo = async () => {
+    if (!formData.name) {
+      toast.error("Please enter a business name first");
+      return;
+    }
+
+    setOptimizingSeo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('optimize-seo', {
+        body: {
+          businessName: formData.name,
+          description: formData.description,
+          category: formData.category_id,
+          location: formData.address || 'Singapore'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.title && data?.description) {
+        setFormData(prev => ({
+          ...prev,
+          seo_title: data.title,
+          seo_description: data.description
+        }));
+        toast.success("SEO content optimized with AI!");
+      } else {
+        throw new Error("Invalid response from AI");
+      }
+    } catch (error: any) {
+      console.error("SEO optimization error:", error);
+      toast.error("Failed to optimize SEO. Please try again.");
+    } finally {
+      setOptimizingSeo(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -652,9 +690,20 @@ const BusinessSubmission = () => {
             {/* Step 5: SEO */}
             {currentStep === 5 && (
               <div className="space-y-6">
-                <div>
-                  <CardTitle className="text-2xl mb-2">SEO Settings</CardTitle>
-                  <CardDescription>Optimize your listing for search engines</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl mb-2">SEO Settings</CardTitle>
+                    <CardDescription>Optimize your listing for search engines</CardDescription>
+                  </div>
+                  <Button
+                    onClick={handleOptimizeSeo}
+                    disabled={optimizingSeo || !formData.name}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {optimizingSeo ? "Optimizing..." : "Optimize with AI"}
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
