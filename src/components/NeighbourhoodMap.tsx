@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { MAPBOX_TOKEN, MAPBOX_TOKEN_MISSING_MESSAGE } from "@/config/mapbox";
 
 interface NeighbourhoodMapProps {
   latitude?: number;
@@ -28,14 +29,12 @@ export const NeighbourhoodMap = ({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    
-    if (!mapboxToken) {
+    if (!MAPBOX_TOKEN) {
       console.warn("Mapbox token not found. Map will not be displayed.");
       return;
     }
 
-    mapboxgl.accessToken = mapboxToken;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -116,11 +115,14 @@ export const NeighbourhoodMap = ({
   return (
     <div className="relative w-full h-[250px] rounded-xl overflow-hidden border border-border">
       <div ref={mapContainer} className="absolute inset-0" />
-      {!import.meta.env.VITE_MAPBOX_TOKEN && (
+      {!MAPBOX_TOKEN && (
         <div className="absolute inset-0 bg-muted flex items-center justify-center">
           <div className="text-center p-4">
             <p className="text-sm text-muted-foreground">
-              Map unavailable - Mapbox token required
+              {MAPBOX_TOKEN_MISSING_MESSAGE}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Configure your Mapbox token in project settings
             </p>
           </div>
         </div>
