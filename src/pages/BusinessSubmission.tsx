@@ -171,13 +171,16 @@ const BusinessSubmission = () => {
 
     setOptimizingSeo(true);
     try {
+      // Prepare comprehensive business context for AI
+      const businessContext = {
+        businessName: formData.name,
+        description: formData.description || formData.short_description || '',
+        category: formData.category_id || '',
+        location: formData.address || formData.postal_code || 'Singapore'
+      };
+
       const { data, error } = await supabase.functions.invoke('optimize-seo', {
-        body: {
-          businessName: formData.name,
-          description: formData.description,
-          category: formData.category_id,
-          location: formData.address || 'Singapore'
-        }
+        body: businessContext
       });
 
       if (error) throw error;
@@ -188,13 +191,13 @@ const BusinessSubmission = () => {
           seo_title: data.title,
           seo_description: data.description
         }));
-        toast.success("SEO content optimized with AI!");
+        toast.success("SEO optimized with AI! Review and edit as needed.");
       } else {
         throw new Error("Invalid response from AI");
       }
     } catch (error: any) {
       console.error("SEO optimization error:", error);
-      toast.error("Failed to optimize SEO. Please try again.");
+      toast.error("Failed to optimize SEO. Please try again or write manually.");
     } finally {
       setOptimizingSeo(false);
     }

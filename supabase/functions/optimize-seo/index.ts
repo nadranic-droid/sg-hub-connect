@@ -33,28 +33,44 @@ serve(async (req) => {
     }
 
     // Create a detailed prompt for SEO optimization
-    const prompt = `You are an SEO expert specializing in local business listings for Singapore. Generate optimized SEO content for the following halal business:
+    const prompt = `You are an expert SEO copywriter specializing in high-CTR business listings. Analyze the business information below and create compelling, customized SEO content that MAXIMIZES click-through rates.
 
-Business Name: ${businessName}
-Description: ${description || 'No description provided'}
-Category: ${category || 'General business'}
+BUSINESS INFORMATION:
+Name: ${businessName}
+Full Description: ${description || 'Not provided'}
+Category/Industry: ${category || 'Not specified'}
 Location: ${location || 'Singapore'}
 
-Generate:
-1. An SEO-optimized title (max 60 characters) that includes the business name and key location/category terms
-2. An SEO-optimized meta description (max 160 characters) that's compelling and includes relevant keywords
+YOUR TASK:
+Create TWO pieces of content that are SPECIFICALLY tailored to THIS business (NOT generic templates):
 
-Focus on:
-- Including location terms (Singapore, neighbourhood if provided)
-- Highlighting halal/Muslim-friendly aspects
-- Action-oriented language
-- Local SEO best practices
-- Avoiding keyword stuffing
+1. SEO TITLE (EXACTLY 55-60 characters to maximize space):
+   - Start with the business name
+   - Include a compelling benefit or unique value proposition
+   - Add location ONLY if characters allow
+   - Use power words: Expert, Professional, Premium, Certified, Trusted, Leading, Best, Top
+   - NO generic phrases like "Halal Business in Singapore"
+   - Examples of GOOD titles: "ONN AGENCY - Expert Marketing Solutions & Growth Strategy"
 
-Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
+2. META DESCRIPTION (EXACTLY 155-160 characters to maximize space):
+   - Start with a strong action verb or benefit statement
+   - Include what makes this business unique based on their description
+   - Add a clear call-to-action (Visit, Discover, Contact, Get, Book, etc.)
+   - Use emotional triggers and urgency
+   - Mention specific services/products if described
+   - Examples of GOOD descriptions: "Transform your business with expert marketing solutions from ONN AGENCY. Strategic campaigns, proven results, and dedicated support. Contact us today for a free consultation!"
+
+CTR OPTIMIZATION RULES:
+- Use numbers when possible (10+ years, 500+ clients, etc.)
+- Include emotional words: Transform, Discover, Expert, Premium, Exclusive
+- Add urgency: Today, Now, Limited, Book Now
+- Make it benefit-focused (what customer GETS, not what you DO)
+- Be specific to THIS business's actual services
+
+Return ONLY valid JSON (no markdown, no code blocks, no extra text):
 {
-  "title": "Your optimized title here",
-  "description": "Your optimized description here"
+  "title": "Your 55-60 character title here",
+  "description": "Your 155-160 character description here"
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -68,11 +84,12 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
         messages: [
           { 
             role: 'system', 
-            content: 'You are an SEO expert. Return only valid JSON without markdown formatting or code blocks.' 
+            content: 'You are a professional SEO copywriter with 10+ years experience. You MUST return ONLY valid JSON with no markdown, no code blocks, no extra text. Format: {"title":"text","description":"text"}' 
           },
           { role: 'user', content: prompt }
         ],
-        max_completion_tokens: 500,
+        max_completion_tokens: 800,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -94,14 +111,37 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
     let seoContent;
     try {
       // Remove markdown code blocks if present
-      const cleanContent = generatedContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanContent = generatedContent
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .replace(/^[^{]*/, '') // Remove any text before first {
+        .replace(/[^}]*$/, '') // Remove any text after last }
+        .trim();
+      
       seoContent = JSON.parse(cleanContent);
+      
+      // Validate the response has required fields
+      if (!seoContent.title || !seoContent.description) {
+        throw new Error('Missing required fields in AI response');
+      }
+      
+      // Ensure character limits
+      if (seoContent.title.length > 60) {
+        seoContent.title = seoContent.title.substring(0, 57) + '...';
+      }
+      if (seoContent.description.length > 160) {
+        seoContent.description = seoContent.description.substring(0, 157) + '...';
+      }
+      
+      console.log('Parsed SEO content:', seoContent);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      // Fallback to basic SEO if parsing fails
+      console.error('Failed to parse AI response:', parseError, 'Raw content:', generatedContent);
+      
+      // Improved fallback using actual business info
+      const shortDesc = description?.substring(0, 100) || 'quality services';
       seoContent = {
-        title: `${businessName} - ${category || 'Halal Business'} in Singapore`,
-        description: description?.substring(0, 160) || `Discover ${businessName}, a halal-certified business in Singapore. Visit us for quality products and services.`
+        title: `${businessName} - ${category || 'Professional Services'}`.substring(0, 60),
+        description: `Discover ${businessName} in Singapore. ${shortDesc}. Contact us today for more information!`.substring(0, 160)
       };
     }
 
