@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN, MAPBOX_TOKEN_MISSING_MESSAGE } from "@/config/mapbox";
@@ -25,16 +25,19 @@ export const NeighbourhoodMap = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [localToken, setLocalToken] = useState<string>("");
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    if (!MAPBOX_TOKEN) {
+    const effectiveToken = MAPBOX_TOKEN || localToken;
+
+    if (!effectiveToken) {
       console.warn("Mapbox token not found. Map will not be displayed.");
       return;
     }
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    mapboxgl.accessToken = effectiveToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -115,15 +118,21 @@ export const NeighbourhoodMap = ({
   return (
     <div className="relative w-full h-[250px] rounded-xl overflow-hidden border border-border">
       <div ref={mapContainer} className="absolute inset-0" />
-      {!MAPBOX_TOKEN && (
+      {!(MAPBOX_TOKEN || localToken) && (
         <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <div className="text-center p-4">
+          <div className="text-center p-4 space-y-2">
             <p className="text-sm text-muted-foreground">
               {MAPBOX_TOKEN_MISSING_MESSAGE}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Configure your Mapbox token in project settings
+            <p className="text-xs text-muted-foreground">
+              Paste a temporary Mapbox public token below to preview the map.
             </p>
+            <input
+              type="text"
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-xs"
+              placeholder="pk.ey... your Mapbox public token"
+              onChange={(e) => setLocalToken(e.target.value.trim())}
+            />
           </div>
         </div>
       )}
