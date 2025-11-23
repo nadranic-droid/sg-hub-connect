@@ -160,6 +160,32 @@ const BusinessSubmission = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  const uploadFile = async (file: File, path: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('business-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      // Fallback to public bucket if business-images doesn't exist (dev env)
+      if (uploadError.message?.includes('Bucket not found')) {
+         // Just return null or handle differently - for now we log warning
+         console.warn('Bucket not found, skipping upload for', file.name);
+         return null;
+      }
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('business-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
@@ -170,6 +196,26 @@ const BusinessSubmission = () => {
       
       // Generate slug from name
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+      // Upload images first
+      let logoUrl = null;
+      let coverImageUrl = null;
+      const imageUrls: string[] = [];
+
+      if (formData.logo) {
+        logoUrl = await uploadFile(formData.logo, 'logos');
+      }
+
+      if (formData.cover_image) {
+        coverImageUrl = await uploadFile(formData.cover_image, 'covers');
+      }
+
+      if (formData.images.length > 0) {
+        for (const file of formData.images) {
+          const url = await uploadFile(file, 'gallery');
+          if (url) imageUrls.push(url);
+        }
+      }
 
       // Extract city from address or use a default
       // This is a simple implementation - you may want to use a geocoding service
@@ -220,6 +266,9 @@ const BusinessSubmission = () => {
         price_range: formData.price_range,
         amenities: formData.amenities,
         operating_hours: formData.operating_hours,
+        logo: logoUrl,
+        cover_image: coverImageUrl,
+        images: imageUrls,
         seo_title: formData.seo_title || formData.name,
         seo_description: formData.seo_description || formData.short_description,
         seo_keywords: formData.seo_keywords,

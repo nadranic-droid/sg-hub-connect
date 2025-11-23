@@ -9,6 +9,7 @@ import { Calendar, Clock, Tag, ArrowLeft, Share2 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateArticleSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 interface Article {
   id: string;
@@ -185,7 +186,7 @@ const ArticleDetail = () => {
           {/* Article Content */}
           <div 
             className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-p:mb-4 prose-p:leading-relaxed prose-ul:my-6 prose-li:mb-2"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
           />
 
           {/* Tags */}
