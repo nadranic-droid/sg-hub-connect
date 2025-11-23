@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
+import { uploadToCloudinary } from "@/utils/cloudinary";
+
 const EventSubmit = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -45,23 +47,11 @@ const EventSubmit = () => {
 
         // Upload Image
         if (imageFile) {
-            const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${crypto.randomUUID()}.${fileExt}`;
-            const bucketName = 'event-images';
-
-            const { error: uploadError } = await supabase.storage
-                .from(bucketName)
-                .upload(fileName, imageFile);
-
-            if (uploadError) {
+            try {
+                imageUrl = await uploadToCloudinary(imageFile, 'events');
+            } catch (uploadError: any) {
                 throw new Error(`Failed to upload image: ${uploadError.message}`);
             }
-
-            const { data: { publicUrl } } = supabase.storage
-                .from(bucketName)
-                .getPublicUrl(fileName);
-                
-            imageUrl = publicUrl;
         }
 
         // Insert Event
