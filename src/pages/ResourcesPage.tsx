@@ -2,53 +2,71 @@ import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { FileText, ExternalLink, Download } from "lucide-react";
+import { FileText, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
 const ResourcesPage = () => {
   const resources = [
     {
-      title: "Halal Certification Guide",
-      description: "A comprehensive guide on how to get MUIS Halal certification for your business.",
+      title: "MUIS Halal Certification Guide",
+      description: "Complete step-by-step guide to obtaining MUIS (Majlis Ugama Islam Singapura) halal certification. Learn about application requirements, fees, inspection process, and renewal procedures for restaurants, cafes, and F&B businesses in Singapore.",
       type: "Guide",
-      link: "#"
+      link: "https://www.muis.gov.sg/Halal/Halal-Certification",
+      external: true
     },
     {
-      title: "Business Grant Checklist",
-      description: "Checklist of available government grants for F&B and tourism businesses.",
+      title: "Singapore Business Grants & Support",
+      description: "Comprehensive checklist of Enterprise Singapore grants available for halal F&B businesses, including Productivity Solutions Grant (PSG), Enterprise Development Grant (EDG), and sector-specific funding for food businesses.",
       type: "Checklist",
-      link: "#"
+      link: "https://www.enterprisesg.gov.sg/financial-assistance",
+      external: true
     },
     {
-      title: "Community Guidelines",
-      description: "Rules and best practices for participating in the SG Hub Connect community.",
+      title: "Halal Business Community Guidelines",
+      description: "Best practices and community standards for halal businesses on Humble Halal. Learn about MUIS compliance, proper halal signage, ingredient sourcing requirements, and maintaining halal integrity in your operations.",
       type: "Policy",
-      link: "#"
+      link: "#",
+      external: false
     },
     {
-      title: "Marketing Toolkit",
-      description: "Templates and assets to help you promote your business on social media.",
+      title: "Singapore Social Media Marketing Toolkit",
+      description: "Ready-to-use templates, hashtag guides, and content ideas specifically designed for halal businesses in Singapore. Includes Instagram, Facebook, and TikTok templates optimized for the local market.",
       type: "Toolkit",
-      link: "#"
+      link: "#",
+      external: false
+    },
+    {
+      title: "Food Safety & Hygiene Standards",
+      description: "SFA (Singapore Food Agency) guidelines and checklists for food businesses. Essential information on licensing, food safety management systems, and compliance requirements for operating in Singapore.",
+      type: "Guide",
+      link: "https://www.sfa.gov.sg/food-retail",
+      external: true
+    },
+    {
+      title: "Halal Ingredient Sourcing Directory",
+      description: "Curated directory of MUIS-certified suppliers and distributors in Singapore. Find halal-certified ingredients, packaging materials, and food products for your business.",
+      type: "Directory",
+      link: "#",
+      external: false
     }
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Resources - SG Hub Connect"
-        description="Helpful resources, guides, and tools for businesses and community members."
-        keywords={["resources", "guides", "business tools", "halal certification", "singapore"]}
+        title="Resources for Halal Businesses in Singapore - Humble Halal"
+        description="Essential resources for halal businesses in Singapore: MUIS certification guides, government grants, food safety standards, marketing toolkits, and community guidelines. Everything you need to start and grow your halal business."
+        keywords={["halal business resources singapore", "MUIS certification guide", "singapore business grants", "halal food business", "singapore F&B resources", "halal marketing singapore"]}
       />
       <Header />
       
       {/* Hero */}
       <section className="bg-primary text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="font-heading font-bold text-4xl mb-4">Resources</h1>
+          <h1 className="font-heading font-bold text-4xl mb-4">Resources for Halal Businesses</h1>
           <p className="text-xl opacity-90 max-w-2xl">
-            Curated guides, tools, and documents to help you succeed.
+            Essential guides, tools, and resources tailored for halal businesses in Singapore. From MUIS certification to government grants and marketing support.
           </p>
         </div>
       </section>
@@ -73,25 +91,56 @@ const ResourcesPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full gap-2" asChild>
-                  <Link to={resource.link}>
-                    <span className="flex-1 text-left">View Resource</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                </Button>
+                {resource.external ? (
+                  <Button variant="outline" className="w-full gap-2" asChild>
+                    <a href={resource.link} target="_blank" rel="noopener noreferrer">
+                      <span className="flex-1 text-left">View Resource</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full gap-2" asChild>
+                    <Link to={resource.link}>
+                      <span className="flex-1 text-left">View Resource</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="mt-12 p-8 bg-muted rounded-xl text-center">
-          <h2 className="text-2xl font-bold mb-4">Need something else?</h2>
-          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-            If you can't find what you're looking for, contact our support team for assistance.
-          </p>
-          <Button asChild>
-            <Link to="/auth">Contact Support</Link>
-          </Button>
+        <div className="mt-12 p-8 bg-muted rounded-xl">
+          <h2 className="text-2xl font-bold mb-4 text-center">Additional Singapore Resources</h2>
+          <div className="grid md:grid-cols-2 gap-4 mt-6">
+            <div className="p-4 bg-background rounded-lg">
+              <h3 className="font-semibold mb-2">Government Agencies</h3>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• <a href="https://www.muis.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">MUIS - Majlis Ugama Islam Singapura</a></li>
+                <li>• <a href="https://www.enterprisesg.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Enterprise Singapore</a></li>
+                <li>• <a href="https://www.sfa.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Singapore Food Agency (SFA)</a></li>
+                <li>• <a href="https://www.acra.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ACRA - Business Registration</a></li>
+              </ul>
+            </div>
+            <div className="p-4 bg-background rounded-lg">
+              <h3 className="font-semibold mb-2">Business Support</h3>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• <a href="https://www.gobusiness.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GoBusiness Portal</a></li>
+                <li>• <a href="https://www.iras.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">IRAS - Tax Information</a></li>
+                <li>• <a href="https://www.mom.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">MOM - Employment Matters</a></li>
+                <li>• <a href="https://www.pdpc.gov.sg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PDPC - Data Protection</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-muted-foreground mb-4">
+              Need help with something specific? Contact our support team.
+            </p>
+            <Button asChild>
+              <Link to="/contact">Contact Support</Link>
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
