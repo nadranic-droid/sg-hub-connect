@@ -19,6 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { uploadToCloudinary } from "@/utils/cloudinary";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -107,9 +108,27 @@ export function ReviewForm({ businessId, businessName, onSuccess }: ReviewFormPr
         return;
       }
 
-      // Upload images if any (placeholder for now - would need storage bucket setup)
+      // Upload images to Cloudinary if any
       const imageUrls: string[] = [];
-      // TODO: Implement image upload to Supabase Storage when bucket is configured
+      if (selectedImages.length > 0) {
+        toast({
+          title: "Uploading images...",
+          description: `Uploading ${selectedImages.length} image(s)`,
+        });
+
+        for (const image of selectedImages) {
+          try {
+            const url = await uploadToCloudinary(image, "reviews");
+            imageUrls.push(url);
+          } catch (uploadError) {
+            toast({
+              title: "Image upload failed",
+              description: `Failed to upload ${image.name}. Continuing without this image.`,
+              variant: "destructive",
+            });
+          }
+        }
+      }
 
       // Insert review
       const { error } = await supabase.from("reviews").insert({

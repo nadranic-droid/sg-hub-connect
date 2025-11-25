@@ -35,6 +35,22 @@ const SearchResults = () => {
   const [minRating, setMinRating] = useState<number>(0);
   const [priceRange, setPriceRange] = useState<string>("");
   const [openNow, setOpenNow] = useState(false);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+
+  // Common amenities list
+  const commonAmenities = [
+    "WiFi",
+    "Parking",
+    "Outdoor Seating",
+    "Delivery",
+    "Takeaway",
+    "Air Conditioning",
+    "Prayer Room",
+    "Wheelchair Accessible",
+    "Kids Friendly",
+    "Reservations",
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,6 +119,21 @@ const SearchResults = () => {
       filtered = filtered.filter(b => b.price_range === priceRange);
     }
 
+    // Filter by amenities
+    if (selectedAmenities.length > 0) {
+      filtered = filtered.filter(b => {
+        const businessAmenities = b.amenities || [];
+        return selectedAmenities.every(amenity =>
+          businessAmenities.some((a: string) => a.toLowerCase().includes(amenity.toLowerCase()))
+        );
+      });
+    }
+
+    // Filter by verified/MUIS certified
+    if (verifiedOnly) {
+      filtered = filtered.filter(b => b.is_verified);
+    }
+
     // Sort
     switch (sortBy) {
       case "rating":
@@ -127,7 +158,7 @@ const SearchResults = () => {
     }
 
     return filtered;
-  }, [businesses, selectedCategories, selectedNeighbourhoods, minRating, priceRange, sortBy]);
+  }, [businesses, selectedCategories, selectedNeighbourhoods, minRating, priceRange, selectedAmenities, verifiedOnly, sortBy]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,10 +171,12 @@ const SearchResults = () => {
     setMinRating(0);
     setPriceRange("");
     setOpenNow(false);
+    setSelectedAmenities([]);
+    setVerifiedOnly(false);
   };
 
-  const activeFiltersCount = selectedCategories.length + selectedNeighbourhoods.length + 
-    (minRating > 0 ? 1 : 0) + (priceRange ? 1 : 0);
+  const activeFiltersCount = selectedCategories.length + selectedNeighbourhoods.length +
+    (minRating > 0 ? 1 : 0) + (priceRange ? 1 : 0) + selectedAmenities.length + (verifiedOnly ? 1 : 0);
 
   const FilterContent = () => (
     <div className="space-y-6">
@@ -249,6 +282,52 @@ const SearchResults = () => {
               </label>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Amenities */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Amenities</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {commonAmenities.map((amenity) => (
+            <div key={amenity} className="flex items-center space-x-2">
+              <Checkbox
+                id={`amenity-${amenity}`}
+                checked={selectedAmenities.includes(amenity)}
+                onCheckedChange={(checked) => {
+                  setSelectedAmenities(
+                    checked
+                      ? [...selectedAmenities, amenity]
+                      : selectedAmenities.filter((a) => a !== amenity)
+                  );
+                }}
+              />
+              <label htmlFor={`amenity-${amenity}`} className="text-sm cursor-pointer">
+                {amenity}
+              </label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Verification Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Certification</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="verified-only"
+              checked={verifiedOnly}
+              onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+            />
+            <label htmlFor="verified-only" className="text-sm cursor-pointer">
+              MUIS Certified Only
+            </label>
+          </div>
         </CardContent>
       </Card>
     </div>

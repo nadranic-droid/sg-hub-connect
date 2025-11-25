@@ -27,6 +27,42 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { AdSlot } from "@/components/AdSlot";
 
+// RSVP localStorage helpers
+const RSVP_STORAGE_KEY = "humble_halal_event_rsvps";
+const RSVP_COUNTS_KEY = "humble_halal_event_rsvp_counts";
+
+const getRSVPs = (): Record<string, boolean> => {
+  try {
+    return JSON.parse(localStorage.getItem(RSVP_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const getRSVPCounts = (): Record<string, number> => {
+  try {
+    return JSON.parse(localStorage.getItem(RSVP_COUNTS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const saveRSVP = (eventId: string, hasRSVPed: boolean) => {
+  const rsvps = getRSVPs();
+  const counts = getRSVPCounts();
+
+  if (hasRSVPed) {
+    rsvps[eventId] = true;
+    counts[eventId] = (counts[eventId] || 0) + 1;
+  } else {
+    delete rsvps[eventId];
+    counts[eventId] = Math.max((counts[eventId] || 1) - 1, 0);
+  }
+
+  localStorage.setItem(RSVP_STORAGE_KEY, JSON.stringify(rsvps));
+  localStorage.setItem(RSVP_COUNTS_KEY, JSON.stringify(counts));
+};
+
 const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -34,6 +70,41 @@ const EventDetail = () => {
   const [relatedEvents, setRelatedEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [hasRSVPed, setHasRSVPed] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(0);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+
+  // Load RSVP state on mount
+  useEffect(() => {
+    if (id) {
+      const rsvps = getRSVPs();
+      const counts = getRSVPCounts();
+      setHasRSVPed(!!rsvps[id]);
+      setRsvpCount(counts[id] || 0);
+    }
+  }, [id]);
+
+  const handleRSVP = () => {
+    if (!id) return;
+
+    setRsvpLoading(true);
+
+    // Simulate a small delay for better UX
+    setTimeout(() => {
+      const newRSVPState = !hasRSVPed;
+      saveRSVP(id, newRSVPState);
+      setHasRSVPed(newRSVPState);
+      setRsvpCount(prev => newRSVPState ? prev + 1 : Math.max(prev - 1, 0));
+
+      if (newRSVPState) {
+        toast.success("You're going! See you at the event.");
+      } else {
+        toast.info("RSVP cancelled");
+      }
+
+      setRsvpLoading(false);
+    }, 300);
+  };
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -369,30 +440,74 @@ const EventDetail = () => {
           <div className="lg:col-span-1">
             <div className="space-y-6 lg:sticky lg:top-24">
               {/* RSVP Card */}
-              <Card className="border-2 border-border shadow-lg">
+              <Card className={`border-2 shadow-lg ${hasRSVPed ? "border-primary bg-primary/5" : "border-border"}`}>
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-primary" />
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${hasRSVPed ? "bg-primary text-white" : "bg-primary/10"}`}>
+                      {hasRSVPed ? (
+                        <CheckCircle2 className="w-8 h-8" />
+                      ) : (
+                        <Users className="w-8 h-8 text-primary" />
+                      )}
                     </div>
-                    <h3 className="text-xl font-bold mb-2 text-foreground">Join This Event</h3>
-                    <p className="text-muted-foreground text-sm font-medium">
-                      RSVP functionality coming soon!
-                    </p>
+                    <h3 className="text-xl font-bold mb-2 text-foreground">
+                      {hasRSVPed ? "You're Going!" : "Join This Event"}
+                    </h3>
+                    {rsvpCount > 0 && (
+                      <p className="text-muted-foreground text-sm font-medium">
+                        {rsvpCount} {rsvpCount === 1 ? "person" : "people"} going
+                      </p>
+                    )}
+                    {!hasRSVPed && rsvpCount === 0 && !isPastEvent && (
+                      <p className="text-muted-foreground text-sm font-medium">
+                        Be the first to RSVP!
+                      </p>
+                    )}
+                    {isPastEvent && (
+                      <p className="text-muted-foreground text-sm font-medium">
+                        This event has ended
+                      </p>
+                    )}
                   </div>
-                  
+
                   <div className="space-y-3">
-                    <Button 
-                      size="lg" 
-                      className="w-full bg-primary hover:bg-primary/90 text-white"
-                      disabled
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      RSVP (Coming Soon)
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
+                    {!isPastEvent ? (
+                      <Button
+                        size="lg"
+                        className={`w-full ${hasRSVPed ? "bg-green-600 hover:bg-green-700" : "bg-primary hover:bg-primary/90"} text-white`}
+                        onClick={handleRSVP}
+                        disabled={rsvpLoading}
+                      >
+                        {rsvpLoading ? (
+                          <span className="flex items-center">
+                            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                            Processing...
+                          </span>
+                        ) : hasRSVPed ? (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Cancel RSVP
+                          </>
+                        ) : (
+                          <>
+                            <Heart className="mr-2 h-4 w-4" />
+                            RSVP Now
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        variant="outline"
+                        disabled
+                      >
+                        Event Ended
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="outline"
                       size="lg"
                       className="w-full border-2 hover:bg-muted"
                       onClick={() => navigate("/events/submit")}

@@ -7,17 +7,45 @@ import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/SEO";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { 
-  Star, 
-  MapPin, 
+import {
+  Star,
+  MapPin,
   Shield,
   ArrowRight,
   Search,
-  LucideIcon
+  LucideIcon,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/seoSchemas";
 import { Card, CardContent } from "@/components/ui/card";
+
+const ITEMS_PER_PAGE = 12;
+const FILTER_STORAGE_KEY = "humble_halal_hub_filters";
+
+// Helper functions for filter persistence
+const getSavedFilter = (categorySlug: string): string => {
+  try {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (!saved) return "all";
+    const filters = JSON.parse(saved);
+    return filters[categorySlug] || "all";
+  } catch {
+    return "all";
+  }
+};
+
+const saveFilter = (categorySlug: string, neighbourhoodId: string) => {
+  try {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    const filters = saved ? JSON.parse(saved) : {};
+    filters[categorySlug] = neighbourhoodId;
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
 
 interface CategoryHubProps {
   categorySlug: string;
@@ -42,9 +70,16 @@ export const CategoryHub = ({
   const [featuredBusinesses, setFeaturedBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedNeighbourhood, setSelectedNeighbourhood] = useState<string>("all");
+  const [selectedNeighbourhood, setSelectedNeighbourhood] = useState<string>(() => getSavedFilter(categorySlug));
   const [neighbourhoods, setNeighbourhoods] = useState<any[]>([]);
   const [category, setCategory] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Save filter when neighbourhood changes
+  const handleNeighbourhoodChange = (value: string) => {
+    setSelectedNeighbourhood(value);
+    saveFilter(categorySlug, value);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,15 +131,30 @@ export const CategoryHub = ({
   }, [categorySlug]);
 
   const filteredBusinesses = businesses.filter((business) => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       business.address?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesNeighbourhood = selectedNeighbourhood === "all" || 
+
+    const matchesNeighbourhood = selectedNeighbourhood === "all" ||
       business.neighbourhood_id === selectedNeighbourhood;
 
     return matchesSearch && matchesNeighbourhood;
   });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedNeighbourhood]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredBusinesses.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedBusinesses = filteredBusinesses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://humblehalal.sg" },
@@ -186,7 +236,7 @@ export const CategoryHub = ({
               <div className="md:w-48">
                 <select
                   value={selectedNeighbourhood}
-                  onChange={(e) => setSelectedNeighbourhood(e.target.value)}
+                  onChange={(e) => handleNeighbourhoodChange(e.target.value)}
                   className="w-full h-12 px-4 rounded-md border border-input bg-background text-sm"
                 >
                   <option value="all">All Areas</option>
@@ -267,28 +317,91 @@ export const CategoryHub = ({
             <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full" />
           </div>
         ) : filteredBusinesses.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBusinesses.map((business) => (
-              <BusinessCard
-                key={business.id}
-                id={business.id}
-                name={business.name}
-                slug={business.slug}
-                category={business.categories?.name}
-                neighbourhood={business.neighbourhoods?.name || "Singapore"}
-                shortDescription={business.short_description}
-                rating={business.avg_rating || 0}
-                reviewCount={business.review_count || 0}
-                priceRange={business.price_range}
-                image={business.cover_image || business.images?.[0]}
-                isVerified={business.is_verified}
-                isFeatured={business.is_featured}
-                phone={business.phone}
-                website={business.website}
-                certification={business.is_verified ? "MUIS" : null}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedBusinesses.map((business) => (
+                <BusinessCard
+                  key={business.id}
+                  id={business.id}
+                  name={business.name}
+                  slug={business.slug}
+                  category={business.categories?.name}
+                  neighbourhood={business.neighbourhoods?.name || "Singapore"}
+                  shortDescription={business.short_description}
+                  rating={business.avg_rating || 0}
+                  reviewCount={business.review_count || 0}
+                  priceRange={business.price_range}
+                  image={business.cover_image || business.images?.[0]}
+                  isVerified={business.is_verified}
+                  isFeatured={business.is_featured}
+                  phone={business.phone}
+                  website={business.website}
+                  certification={business.is_verified ? "MUIS" : null}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      // Show first, last, current, and adjacent pages
+                      if (page === 1 || page === totalPages) return true;
+                      if (Math.abs(page - currentPage) <= 1) return true;
+                      return false;
+                    })
+                    .map((page, index, arr) => {
+                      // Add ellipsis
+                      const prevPage = arr[index - 1];
+                      const showEllipsis = prevPage && page - prevPage > 1;
+
+                      return (
+                        <div key={page} className="flex items-center gap-1">
+                          {showEllipsis && (
+                            <span className="px-2 text-muted-foreground">...</span>
+                          )}
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(page)}
+                            aria-label={`Go to page ${page}`}
+                            aria-current={currentPage === page ? "page" : undefined}
+                          >
+                            {page}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+
+                <span className="text-sm text-muted-foreground ml-4">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <h3 className="text-xl font-semibold mb-2">No {categoryName.toLowerCase()} found</h3>

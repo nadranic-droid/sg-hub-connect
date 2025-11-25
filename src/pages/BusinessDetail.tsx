@@ -12,16 +12,27 @@ import {
   MapPin,
   Navigation,
   Bookmark,
+  BookmarkCheck,
   User,
   Search,
   Shield,
   Clock,
+  ThumbsUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ShareButtons } from "@/components/ShareButtons";
+import { ReviewResponse } from "@/components/ReviewResponse";
+import { AddToCollectionButton } from "@/components/FavoriteCollections";
+import { format } from "date-fns";
+
+interface OperatingHours {
+  [day: string]: { open: string; close: string } | null;
+}
 
 interface Business {
   id: string;
@@ -40,7 +51,7 @@ interface Business {
   neighbourhoods?: { name: string; slug: string; region?: string };
   price_range?: string;
   amenities?: string[];
-  operating_hours?: Record<string, unknown>;
+  operating_hours?: OperatingHours;
   latitude?: number;
   longitude?: number;
   is_verified?: boolean;
@@ -48,12 +59,154 @@ interface Business {
   postal_code?: string;
   seo_title?: string;
   seo_description?: string;
+  owner_id?: string;
 }
+
+interface Review {
+  id: string;
+  user_id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  images?: string[];
+  helpful_count?: number;
+  response?: {
+    id: string;
+    content: string;
+    created_at: string;
+  };
+}
+
+// Helper function to get business open status
+const getBusinessStatus = (operatingHours?: OperatingHours): { isOpen: boolean; statusText: string; closingTime?: string } => {
+  if (!operatingHours) {
+    return { isOpen: false, statusText: "Hours not available" };
+  }
+
+  const now = new Date();
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const currentDay = days[now.getDay()];
+  const todayHours = operatingHours[currentDay];
+
+  if (!todayHours) {
+    return { isOpen: false, statusText: "Closed today" };
+  }
+
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+
+  const openTime = parseTime(todayHours.open);
+  const closeTime = parseTime(todayHours.close);
+
+  if (currentTime >= openTime && currentTime < closeTime) {
+    const closeHour = Math.floor(closeTime / 60);
+    const closeMin = closeTime % 60;
+    const period = closeHour >= 12 ? "PM" : "AM";
+    const displayHour = closeHour > 12 ? closeHour - 12 : closeHour || 12;
+    const closingTime = `${displayHour}${closeMin ? `:${closeMin.toString().padStart(2, "0")}` : ""} ${period}`;
+    return { isOpen: true, statusText: "Open Now", closingTime };
+  }
+
+  return { isOpen: false, statusText: "Closed" };
+};
 
 const BusinessDetail = () => {
   const { slug } = useParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Fetch reviews for the business
+  const fetchReviews = async (businessId: string) => {
+    setReviewsLoading(true);
+    try {
+      const { data } = await supabase
+        .from("reviews")
+        .select(`
+          id,
+          user_id,
+          rating,
+          content,
+          created_at,
+          images,
+          helpful_count,
+          review_responses (
+            id,
+            content,
+            created_at
+          )
+        `)
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        const formattedReviews: Review[] = data.map((r: any) => ({
+          ...r,
+          response: r.review_responses?.[0] || undefined,
+        }));
+        setReviews(formattedReviews);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Fetch reviews when business is loaded
+  useEffect(() => {
+    if (business?.id) {
+      fetchReviews(business.id);
+    }
+  }, [business?.id]);
+
+  // Check if business is saved in localStorage
+  useEffect(() => {
+    if (business?.id) {
+      const savedBusinesses = JSON.parse(localStorage.getItem("savedBusinesses") || "[]");
+      setIsSaved(savedBusinesses.includes(business.id));
+    }
+  }, [business?.id]);
+
+  const handleNavigate = () => {
+    if (business?.latitude && business?.longitude) {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`,
+        "_blank"
+      );
+    } else if (business?.address) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address)}`,
+        "_blank"
+      );
+    } else {
+      toast.error("Location not available for this business");
+    }
+  };
+
+  const handleSave = () => {
+    if (!business?.id) return;
+
+    const savedBusinesses = JSON.parse(localStorage.getItem("savedBusinesses") || "[]");
+
+    if (isSaved) {
+      const updated = savedBusinesses.filter((id: string) => id !== business.id);
+      localStorage.setItem("savedBusinesses", JSON.stringify(updated));
+      setIsSaved(false);
+      toast.success("Removed from saved businesses");
+    } else {
+      savedBusinesses.push(business.id);
+      localStorage.setItem("savedBusinesses", JSON.stringify(savedBusinesses));
+      setIsSaved(true);
+      toast.success("Saved to your favorites");
+    }
+  };
 
   useEffect(() => {
     const fetchBusiness = async () => {
@@ -230,14 +383,29 @@ const BusinessDetail = () => {
                   </a>
                 </Button>
               )}
-              <Button className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2">
+              <Button
+                className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2"
+                onClick={handleNavigate}
+              >
                 <Navigation className="w-5 h-5" />
                 <span className="text-lg font-semibold">Navigate</span>
               </Button>
-              <Button className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2">
-                <Bookmark className="w-5 h-5" />
-                <span className="text-lg font-semibold">Save</span>
+              <Button
+                className={`h-auto py-4 flex flex-col gap-2 ${isSaved ? "bg-primary text-white hover:bg-primary/90" : "bg-secondary text-white hover:bg-secondary-dark"}`}
+                onClick={handleSave}
+              >
+                {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                <span className="text-lg font-semibold">{isSaved ? "Saved" : "Save"}</span>
               </Button>
+            </div>
+
+            {/* Share and Collection Buttons */}
+            <div className="flex justify-end gap-2">
+              <AddToCollectionButton businessId={business.id} />
+              <ShareButtons
+                title={business.name}
+                description={business.short_description || `${business.categories?.name} in ${business.neighbourhoods?.name}`}
+              />
             </div>
 
             {/* Tabs */}
@@ -281,16 +449,134 @@ const BusinessDetail = () => {
               </TabsContent>
 
               <TabsContent value="menu" className="mt-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Menu information coming soon...</p>
+                <div className="text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <Globe className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="font-heading font-bold text-xl mb-2">Menu Not Available</h3>
+                    <p className="text-muted-foreground mb-4">
+                      This business hasn't added their menu yet.
+                    </p>
+                    {business.website ? (
+                      <Button asChild variant="outline">
+                        <a href={business.website} target="_blank" rel="noopener noreferrer">
+                          <Globe className="w-4 h-4 mr-2" />
+                          Visit Website for Menu
+                        </a>
+                      </Button>
+                    ) : business.phone ? (
+                      <Button asChild variant="outline">
+                        <a href={`tel:${business.phone}`}>
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call for Menu Info
+                        </a>
+                      </Button>
+                    ) : null}
+                    {!business.is_claimed && (
+                      <p className="text-sm text-muted-foreground mt-4">
+                        Are you the owner?{" "}
+                        <Link to={`/claim-business?business=${business.id}`} className="text-primary hover:underline">
+                          Claim this business
+                        </Link>{" "}
+                        to add your menu.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-6">
                 <div className="space-y-8">
-                  <ReviewForm businessId={business.id} businessName={business.name} />
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No reviews yet. Be the first to review!</p>
+                  <ReviewForm
+                    businessId={business.id}
+                    businessName={business.name}
+                    onSuccess={() => fetchReviews(business.id)}
+                  />
+
+                  {/* Reviews List */}
+                  <div className="space-y-6">
+                    <h3 className="font-heading font-bold text-xl">
+                      Customer Reviews ({reviews.length})
+                    </h3>
+
+                    {reviewsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      <div className="space-y-6">
+                        {reviews.map((review) => (
+                          <Card key={review.id} className="border">
+                            <CardContent className="p-6">
+                              {/* Review Header */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <Link to={`/user/${review.user_id}`}>
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                      <User className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                  </Link>
+                                  <div>
+                                    <Link to={`/user/${review.user_id}`} className="font-semibold hover:text-primary transition-colors">
+                                      Community Member
+                                    </Link>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(review.created_at), "MMM d, yyyy")}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-semibold">{review.rating}</span>
+                                </div>
+                              </div>
+
+                              {/* Review Content */}
+                              <p className="text-muted-foreground mb-4">{review.content}</p>
+
+                              {/* Review Images */}
+                              {review.images && review.images.length > 0 && (
+                                <div className="flex gap-2 mb-4 flex-wrap">
+                                  {review.images.map((img, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="w-20 h-20 rounded-lg overflow-hidden bg-muted"
+                                    >
+                                      <img
+                                        src={img}
+                                        alt={`Review photo ${idx + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Helpful Count */}
+                              {review.helpful_count && review.helpful_count > 0 && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <ThumbsUp className="w-3 h-3" />
+                                  {review.helpful_count} found this helpful
+                                </div>
+                              )}
+
+                              {/* Business Owner Response */}
+                              <ReviewResponse
+                                reviewId={review.id}
+                                businessId={business.id}
+                                businessOwnerId={business.owner_id}
+                                existingResponse={review.response}
+                                onResponseAdded={() => fetchReviews(business.id)}
+                              />
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-muted/30 rounded-lg">
+                        <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -325,13 +611,22 @@ const BusinessDetail = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <div className="text-sm">
-                    <p className="font-semibold text-primary">Open Now</p>
-                    <p className="text-muted-foreground text-xs">Closes 10 PM</p>
-                  </div>
-                </div>
+                {(() => {
+                  const status = getBusinessStatus(business.operating_hours);
+                  return (
+                    <div className="flex items-center gap-3">
+                      <Clock className={`w-5 h-5 ${status.isOpen ? "text-primary" : "text-muted-foreground"}`} />
+                      <div className="text-sm">
+                        <p className={`font-semibold ${status.isOpen ? "text-primary" : "text-destructive"}`}>
+                          {status.statusText}
+                        </p>
+                        {status.closingTime && (
+                          <p className="text-muted-foreground text-xs">Closes {status.closingTime}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {business.amenities && business.amenities.length > 0 && (
                   <>

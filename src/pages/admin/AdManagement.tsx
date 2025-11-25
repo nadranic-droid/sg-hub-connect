@@ -62,12 +62,10 @@ const AdManagement = () => {
       `)
       .order("created_at", { ascending: false });
       
-    if (error) {
-        // Table might not exist in this version, just show empty or mock
-        console.log("Ad slots table query error:", error);
-    } else {
+    if (!error) {
         setAds(data || []);
     }
+    // If error, table might not exist - show empty state
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

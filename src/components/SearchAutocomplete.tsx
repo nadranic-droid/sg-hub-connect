@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, MapPin, Building2, X } from "lucide-react";
+import { Search, MapPin, Building2, X, History, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+
+const SEARCH_HISTORY_KEY = "humble_halal_search_history";
+const MAX_HISTORY_ITEMS = 5;
+
+interface SearchHistoryItem {
+  query: string;
+  type: "business" | "location";
+  timestamp: number;
+}
 
 interface SearchAutocompleteProps {
   value: string;
@@ -11,6 +20,64 @@ interface SearchAutocompleteProps {
   type: "business" | "location";
   onSelect?: (item: any) => void;
 }
+
+// Helper functions for search history
+const getSearchHistory = (type: "business" | "location"): SearchHistoryItem[] => {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!history) return [];
+    const parsed = JSON.parse(history) as SearchHistoryItem[];
+    return parsed.filter(item => item.type === type).slice(0, MAX_HISTORY_ITEMS);
+  } catch {
+    return [];
+  }
+};
+
+const saveToSearchHistory = (query: string, type: "business" | "location") => {
+  if (!query.trim() || query.length < 2) return;
+
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    let parsed: SearchHistoryItem[] = history ? JSON.parse(history) : [];
+
+    // Remove duplicate if exists
+    parsed = parsed.filter(item => !(item.query.toLowerCase() === query.toLowerCase() && item.type === type));
+
+    // Add new item at the beginning
+    parsed.unshift({ query: query.trim(), type, timestamp: Date.now() });
+
+    // Keep only recent items (10 total across both types)
+    parsed = parsed.slice(0, 10);
+
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
+const removeFromSearchHistory = (query: string, type: "business" | "location") => {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!history) return;
+    let parsed: SearchHistoryItem[] = JSON.parse(history);
+    parsed = parsed.filter(item => !(item.query.toLowerCase() === query.toLowerCase() && item.type === type));
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
+const clearSearchHistory = (type: "business" | "location") => {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!history) return;
+    let parsed: SearchHistoryItem[] = JSON.parse(history);
+    parsed = parsed.filter(item => item.type !== type);
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
 
 export const SearchAutocomplete = ({
   value,
@@ -22,12 +89,20 @@ export const SearchAutocomplete = ({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Load search history on mount
+  useEffect(() => {
+    setSearchHistory(getSearchHistory(type));
+  }, [type]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
+        setShowHistory(false);
       }
     };
 
@@ -45,6 +120,7 @@ export const SearchAutocomplete = ({
 
       setLoading(true);
       setShowSuggestions(true);
+      setShowHistory(false);
 
       try {
         if (type === "business") {
@@ -94,9 +170,38 @@ export const SearchAutocomplete = ({
 
   const handleSelect = (item: any) => {
     onChange(item.name);
+    saveToSearchHistory(item.name, type);
+    setSearchHistory(getSearchHistory(type));
     setShowSuggestions(false);
+    setShowHistory(false);
     if (onSelect) {
       onSelect(item);
+    }
+  };
+
+  const handleHistorySelect = (query: string) => {
+    onChange(query);
+    setShowHistory(false);
+  };
+
+  const handleRemoveHistoryItem = (e: React.MouseEvent, query: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeFromSearchHistory(query, type);
+    setSearchHistory(getSearchHistory(type));
+  };
+
+  const handleClearAllHistory = () => {
+    clearSearchHistory(type);
+    setSearchHistory([]);
+    setShowHistory(false);
+  };
+
+  const handleFocus = () => {
+    if (value.length >= 2) {
+      setShowSuggestions(true);
+    } else if (searchHistory.length > 0 && !value) {
+      setShowHistory(true);
     }
   };
 
@@ -110,7 +215,7 @@ export const SearchAutocomplete = ({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => value.length >= 2 && setShowSuggestions(true)}
+          onFocus={handleFocus}
           placeholder={placeholder}
           className="w-full h-10 sm:h-12 pl-9 sm:pl-11 pr-9 text-foreground text-sm sm:text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
         />
@@ -120,6 +225,7 @@ export const SearchAutocomplete = ({
             onClick={() => {
               onChange("");
               setShowSuggestions(false);
+              setShowHistory(false);
             }}
             className="absolute right-2 w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
           >
@@ -128,8 +234,43 @@ export const SearchAutocomplete = ({
         )}
       </div>
 
+      {/* Search History Dropdown */}
+      {showHistory && searchHistory.length > 0 && !value && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+            <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+            <button
+              type="button"
+              onClick={handleClearAllHistory}
+              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear all
+            </button>
+          </div>
+          {searchHistory.map((item, index) => (
+            <div
+              key={`history-${index}`}
+              onClick={() => handleHistorySelect(item.query)}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors cursor-pointer border-b last:border-b-0"
+            >
+              <History className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="flex-1 text-foreground">{item.query}</span>
+              <button
+                type="button"
+                onClick={(e) => handleRemoveHistoryItem(e, item.query)}
+                className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
           {suggestions.map((item, index) => (
             <Link
               key={`${item.type}-${item.id}-${index}`}
@@ -184,11 +325,10 @@ export const SearchAutocomplete = ({
       )}
 
       {showSuggestions && loading && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-50 p-4 text-center text-sm text-muted-foreground">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 p-4 text-center text-sm text-muted-foreground">
           Searching...
         </div>
       )}
     </div>
   );
 };
-

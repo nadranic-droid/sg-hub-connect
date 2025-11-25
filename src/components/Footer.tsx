@@ -171,8 +171,12 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-          <div className="text-[#aaaaaa]">
-            © {new Date().getFullYear()} Humble Halal - Discover Halal Singapore
+          <div className="flex items-center gap-4 text-[#aaaaaa]">
+            <span>© {new Date().getFullYear()} Humble Halal</span>
+            <span>•</span>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <span>•</span>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
           </div>
           <div className="flex items-center gap-4">
             <a href="#" className="text-white hover:text-primary transition-colors" aria-label="Facebook">

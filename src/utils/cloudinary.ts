@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Configuration
-const CLOUD_NAME = "Mediaflows_b2db7492-4e7b-46d1-9e39-89263c9cf98f";
-const UPLOAD_PRESET = "sg_hub_uploads"; // You need to create this in Cloudinary Dashboard -> Settings -> Upload -> Upload presets (Mode: Unsigned)
+// Configuration - prefer environment variables, fallback to defaults
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "Mediaflows_b2db7492-4e7b-46d1-9e39-89263c9cf98f";
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "sg_hub_uploads";
 
 /**
  * Upload a file to Cloudinary
@@ -12,9 +12,8 @@ const UPLOAD_PRESET = "sg_hub_uploads"; // You need to create this in Cloudinary
 export const uploadToCloudinary = async (file: File, folder: string = "general"): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET); 
+  formData.append("upload_preset", UPLOAD_PRESET);
   formData.append("folder", folder);
-  // formData.append("api_key", "JdEhdhEqKjVLZHZcNN4Okr8VGXY"); // Usually not needed for unsigned uploads
 
   try {
     const response = await axios.post(
