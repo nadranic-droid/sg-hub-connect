@@ -22,6 +22,30 @@ import { generateBreadcrumbSchema, generateCollectionPageSchema } from "@/utils/
 import { Card, CardContent } from "@/components/ui/card";
 
 const ITEMS_PER_PAGE = 12;
+const FILTER_STORAGE_KEY = "humble_halal_hub_filters";
+
+// Helper functions for filter persistence
+const getSavedFilter = (categorySlug: string): string => {
+  try {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (!saved) return "all";
+    const filters = JSON.parse(saved);
+    return filters[categorySlug] || "all";
+  } catch {
+    return "all";
+  }
+};
+
+const saveFilter = (categorySlug: string, neighbourhoodId: string) => {
+  try {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    const filters = saved ? JSON.parse(saved) : {};
+    filters[categorySlug] = neighbourhoodId;
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
 
 interface CategoryHubProps {
   categorySlug: string;
@@ -46,10 +70,16 @@ export const CategoryHub = ({
   const [featuredBusinesses, setFeaturedBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedNeighbourhood, setSelectedNeighbourhood] = useState<string>("all");
+  const [selectedNeighbourhood, setSelectedNeighbourhood] = useState<string>(() => getSavedFilter(categorySlug));
   const [neighbourhoods, setNeighbourhoods] = useState<any[]>([]);
   const [category, setCategory] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Save filter when neighbourhood changes
+  const handleNeighbourhoodChange = (value: string) => {
+    setSelectedNeighbourhood(value);
+    saveFilter(categorySlug, value);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -206,7 +236,7 @@ export const CategoryHub = ({
               <div className="md:w-48">
                 <select
                   value={selectedNeighbourhood}
-                  onChange={(e) => setSelectedNeighbourhood(e.target.value)}
+                  onChange={(e) => handleNeighbourhoodChange(e.target.value)}
                   className="w-full h-12 px-4 rounded-md border border-input bg-background text-sm"
                 >
                   <option value="all">All Areas</option>

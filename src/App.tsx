@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -53,16 +55,20 @@ import GroceryHub from "./pages/GroceryHub";
 import HealthcareHub from "./pages/HealthcareHub";
 import EducationHub from "./pages/EducationHub";
 import BeautyHub from "./pages/BeautyHub";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <CookieConsent />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore/:neighbourhood" element={<ExplorePage />} />
@@ -94,6 +100,8 @@ const App = () => (
             <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/advertise" element={<Advertise />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/badge-generator" element={<BadgeGenerator />} />
             <Route path="/claim-business" element={<ClaimBusiness />} />
             <Route path="/upgrade/featured/:businessId" element={<FeaturedUpgrade />} />
@@ -118,10 +126,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </ThemeProvider>
 );
 
 export default App;

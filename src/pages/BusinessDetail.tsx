@@ -24,6 +24,7 @@ import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/s
 import { ReviewForm } from "@/components/ReviewForm";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface OperatingHours {
   [day: string]: { open: string; close: string } | null;
@@ -330,6 +331,14 @@ const BusinessDetail = () => {
                 {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                 <span className="text-lg font-semibold">{isSaved ? "Saved" : "Save"}</span>
               </Button>
+            </div>
+
+            {/* Share Button */}
+            <div className="flex justify-end">
+              <ShareButtons
+                title={business.name}
+                description={business.short_description || `${business.categories?.name} in ${business.neighbourhoods?.name}`}
+              />
             </div>
 
             {/* Tabs */}
