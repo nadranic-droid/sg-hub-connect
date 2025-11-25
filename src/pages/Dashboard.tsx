@@ -10,14 +10,14 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  LogOut, 
-  Building2, 
-  Star, 
-  Heart, 
-  MessageSquare, 
-  Plus, 
-  TrendingUp, 
+import {
+  LogOut,
+  Building2,
+  Star,
+  Heart,
+  MessageSquare,
+  Plus,
+  TrendingUp,
   Eye,
   Sparkles,
   Badge as BadgeIcon,
@@ -33,8 +33,10 @@ import {
   Phone,
   MapPin,
   ExternalLink,
-  ArrowRight
+  ArrowRight,
+  FolderHeart
 } from "lucide-react";
+import { FavoriteCollections } from "@/components/FavoriteCollections";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import type { User } from "@supabase/supabase-js";
@@ -202,7 +204,7 @@ const Dashboard = () => {
 
         {/* Tabs Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
+          <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted">
             <TabsTrigger value="overview" className="gap-2 py-3">
               <BarChart3 className="w-4 h-4" />
               Overview
@@ -214,6 +216,10 @@ const Dashboard = () => {
             <TabsTrigger value="businesses" className="gap-2 py-3">
               <Building2 className="w-4 h-4" />
               Businesses
+            </TabsTrigger>
+            <TabsTrigger value="collections" className="gap-2 py-3">
+              <FolderHeart className="w-4 h-4" />
+              Collections
             </TabsTrigger>
             <TabsTrigger value="activity" className="gap-2 py-3">
               <TrendingUp className="w-4 h-4" />
@@ -559,6 +565,11 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Collections Tab */}
+          <TabsContent value="collections">
+            <FavoriteCollections />
           </TabsContent>
 
           {/* Activity Tab */}

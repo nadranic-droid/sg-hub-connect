@@ -17,6 +17,7 @@ import {
   Search,
   Shield,
   Clock,
+  ThumbsUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
@@ -25,6 +26,9 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ShareButtons } from "@/components/ShareButtons";
+import { ReviewResponse } from "@/components/ReviewResponse";
+import { AddToCollectionButton } from "@/components/FavoriteCollections";
+import { format } from "date-fns";
 
 interface OperatingHours {
   [day: string]: { open: string; close: string } | null;
@@ -55,6 +59,22 @@ interface Business {
   postal_code?: string;
   seo_title?: string;
   seo_description?: string;
+  owner_id?: string;
+}
+
+interface Review {
+  id: string;
+  user_id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  images?: string[];
+  helpful_count?: number;
+  response?: {
+    id: string;
+    content: string;
+    created_at: string;
+  };
 }
 
 // Helper function to get business open status
@@ -99,6 +119,52 @@ const BusinessDetail = () => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Fetch reviews for the business
+  const fetchReviews = async (businessId: string) => {
+    setReviewsLoading(true);
+    try {
+      const { data } = await supabase
+        .from("reviews")
+        .select(`
+          id,
+          user_id,
+          rating,
+          content,
+          created_at,
+          images,
+          helpful_count,
+          review_responses (
+            id,
+            content,
+            created_at
+          )
+        `)
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        const formattedReviews: Review[] = data.map((r: any) => ({
+          ...r,
+          response: r.review_responses?.[0] || undefined,
+        }));
+        setReviews(formattedReviews);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Fetch reviews when business is loaded
+  useEffect(() => {
+    if (business?.id) {
+      fetchReviews(business.id);
+    }
+  }, [business?.id]);
 
   // Check if business is saved in localStorage
   useEffect(() => {
@@ -333,8 +399,9 @@ const BusinessDetail = () => {
               </Button>
             </div>
 
-            {/* Share Button */}
-            <div className="flex justify-end">
+            {/* Share and Collection Buttons */}
+            <div className="flex justify-end gap-2">
+              <AddToCollectionButton businessId={business.id} />
               <ShareButtons
                 title={business.name}
                 description={business.short_description || `${business.categories?.name} in ${business.neighbourhoods?.name}`}
@@ -419,9 +486,97 @@ const BusinessDetail = () => {
 
               <TabsContent value="reviews" className="mt-6">
                 <div className="space-y-8">
-                  <ReviewForm businessId={business.id} businessName={business.name} />
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No reviews yet. Be the first to review!</p>
+                  <ReviewForm
+                    businessId={business.id}
+                    businessName={business.name}
+                    onSuccess={() => fetchReviews(business.id)}
+                  />
+
+                  {/* Reviews List */}
+                  <div className="space-y-6">
+                    <h3 className="font-heading font-bold text-xl">
+                      Customer Reviews ({reviews.length})
+                    </h3>
+
+                    {reviewsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      <div className="space-y-6">
+                        {reviews.map((review) => (
+                          <Card key={review.id} className="border">
+                            <CardContent className="p-6">
+                              {/* Review Header */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <Link to={`/user/${review.user_id}`}>
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                      <User className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                  </Link>
+                                  <div>
+                                    <Link to={`/user/${review.user_id}`} className="font-semibold hover:text-primary transition-colors">
+                                      Community Member
+                                    </Link>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(review.created_at), "MMM d, yyyy")}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-semibold">{review.rating}</span>
+                                </div>
+                              </div>
+
+                              {/* Review Content */}
+                              <p className="text-muted-foreground mb-4">{review.content}</p>
+
+                              {/* Review Images */}
+                              {review.images && review.images.length > 0 && (
+                                <div className="flex gap-2 mb-4 flex-wrap">
+                                  {review.images.map((img, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="w-20 h-20 rounded-lg overflow-hidden bg-muted"
+                                    >
+                                      <img
+                                        src={img}
+                                        alt={`Review photo ${idx + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Helpful Count */}
+                              {review.helpful_count && review.helpful_count > 0 && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <ThumbsUp className="w-3 h-3" />
+                                  {review.helpful_count} found this helpful
+                                </div>
+                              )}
+
+                              {/* Business Owner Response */}
+                              <ReviewResponse
+                                reviewId={review.id}
+                                businessId={business.id}
+                                businessOwnerId={business.owner_id}
+                                existingResponse={review.response}
+                                onResponseAdded={() => fetchReviews(business.id)}
+                              />
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-muted/30 rounded-lg">
+                        <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>

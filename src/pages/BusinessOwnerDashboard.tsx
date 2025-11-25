@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Building2, Star, MessageSquare, Plus, TrendingUp, Eye, Users, BarChart3, Sparkles, ExternalLink } from "lucide-react";
+import { LogOut, Building2, Star, MessageSquare, Plus, TrendingUp, Eye, Users, BarChart3, Sparkles, ExternalLink, PieChart } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { BusinessAnalytics } from "@/components/BusinessAnalytics";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { User } from "@supabase/supabase-js";
 
@@ -330,10 +331,14 @@ const BusinessOwnerDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="businesses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
             <TabsTrigger value="businesses" className="gap-2 py-3">
               <Building2 className="w-4 h-4" />
               My Businesses
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 py-3">
+              <PieChart className="w-4 h-4" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="reviews" className="gap-2 py-3">
               <Star className="w-4 h-4" />
@@ -461,6 +466,30 @@ const BusinessOwnerDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            {businesses.length > 0 ? (
+              <BusinessAnalytics
+                businessId={businesses[0].id}
+                businessName={businesses[0].name}
+              />
+            ) : (
+              <Card className="shadow-xl">
+                <CardContent className="p-12 text-center">
+                  <PieChart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-heading font-bold text-xl mb-2">No Analytics Available</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Add your first business to start tracking performance metrics.
+                  </p>
+                  <Button onClick={() => navigate("/business/submit")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First Business
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Reviews Tab */}

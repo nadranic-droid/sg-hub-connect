@@ -57,6 +57,7 @@ import EducationHub from "./pages/EducationHub";
 import BeautyHub from "./pages/BeautyHub";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ const App = () => (
             <Route path="/advertise" element={<Advertise />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/badge-generator" element={<BadgeGenerator />} />
             <Route path="/claim-business" element={<ClaimBusiness />} />
             <Route path="/upgrade/featured/:businessId" element={<FeaturedUpgrade />} />
