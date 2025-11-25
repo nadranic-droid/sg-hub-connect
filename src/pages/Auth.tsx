@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, User, Sparkles } from "lucide-react";
+import { PasswordStrength, usePasswordStrength } from "@/components/PasswordStrength";
+import { checkRateLimit, resetRateLimit } from "@/utils/rateLimiter";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const passwordStrength = usePasswordStrength(password);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -62,6 +65,14 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check rate limit
+    const rateLimit = checkRateLimit("login_attempt", email);
+    if (!rateLimit.allowed) {
+      toast.error(rateLimit.message || "Too many login attempts. Please try again later.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -72,6 +83,8 @@ const Auth = () => {
 
       if (error) throw error;
 
+      // Reset rate limit on successful login
+      resetRateLimit("login_attempt", email);
       toast.success("Signed in successfully!");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to sign in";
@@ -83,6 +96,20 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check password strength
+    if (!passwordStrength.isValid) {
+      toast.error("Please choose a stronger password that meets all requirements.");
+      return;
+    }
+
+    // Check rate limit
+    const rateLimit = checkRateLimit("signup", email);
+    if (!rateLimit.allowed) {
+      toast.error(rateLimit.message || "Too many signup attempts. Please try again later.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -246,11 +273,12 @@ const Auth = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 h-11 border-2 focus:border-primary transition-colors"
                         required
-                        minLength={6}
+                        minLength={8}
                       />
                     </div>
+                    <PasswordStrength password={password} showRequirements={true} />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading} variant="hero" size="lg">
+                  <Button type="submit" className="w-full" disabled={loading || !passwordStrength.isValid} variant="hero" size="lg">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Account
                   </Button>
