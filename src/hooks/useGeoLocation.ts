@@ -67,7 +67,6 @@ export const useGeoLocation = () => {
   useEffect(() => {
     // Check if geolocation is available
     if (!navigator.geolocation) {
-      console.log("Geolocation not supported, using default");
       setLoading(false);
       return;
     }
@@ -114,15 +113,13 @@ export const useGeoLocation = () => {
             setNearestNeighbourhood(data[0].name);
             localStorage.setItem('user_neighbourhood', data[0].name);
           }
-        } catch (dbError) {
+        } catch {
           // Database lookup failed, use calculated neighbourhood
-          console.log("Database lookup failed, using calculated neighbourhood");
         }
         
         setLoading(false);
       },
       (error) => {
-        console.log("Geolocation error:", error.message);
         setError(error.message);
         
         // Try to use IP-based location as fallback
@@ -152,9 +149,8 @@ export const useGeoLocation = () => {
         localStorage.setItem('user_location', JSON.stringify({ lat: data.latitude, lng: data.longitude }));
         localStorage.setItem('user_neighbourhood', neighbourhood);
       }
-    } catch (ipError) {
-      console.log("IP location fetch failed, using default");
-      // Keep default "Bugis"
+    } catch {
+      // IP location fetch failed, keep default neighbourhood
     }
   };
 

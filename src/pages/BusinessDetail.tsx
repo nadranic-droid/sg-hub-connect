@@ -12,16 +12,22 @@ import {
   MapPin,
   Navigation,
   Bookmark,
+  BookmarkCheck,
   User,
   Search,
   Shield,
   Clock,
 } from "lucide-react";
+import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/utils/seoSchemas";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+
+interface OperatingHours {
+  [day: string]: { open: string; close: string } | null;
+}
 
 interface Business {
   id: string;
@@ -40,7 +46,7 @@ interface Business {
   neighbourhoods?: { name: string; slug: string; region?: string };
   price_range?: string;
   amenities?: string[];
-  operating_hours?: Record<string, unknown>;
+  operating_hours?: OperatingHours;
   latitude?: number;
   longitude?: number;
   is_verified?: boolean;
@@ -50,10 +56,90 @@ interface Business {
   seo_description?: string;
 }
 
+// Helper function to get business open status
+const getBusinessStatus = (operatingHours?: OperatingHours): { isOpen: boolean; statusText: string; closingTime?: string } => {
+  if (!operatingHours) {
+    return { isOpen: false, statusText: "Hours not available" };
+  }
+
+  const now = new Date();
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const currentDay = days[now.getDay()];
+  const todayHours = operatingHours[currentDay];
+
+  if (!todayHours) {
+    return { isOpen: false, statusText: "Closed today" };
+  }
+
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+
+  const openTime = parseTime(todayHours.open);
+  const closeTime = parseTime(todayHours.close);
+
+  if (currentTime >= openTime && currentTime < closeTime) {
+    const closeHour = Math.floor(closeTime / 60);
+    const closeMin = closeTime % 60;
+    const period = closeHour >= 12 ? "PM" : "AM";
+    const displayHour = closeHour > 12 ? closeHour - 12 : closeHour || 12;
+    const closingTime = `${displayHour}${closeMin ? `:${closeMin.toString().padStart(2, "0")}` : ""} ${period}`;
+    return { isOpen: true, statusText: "Open Now", closingTime };
+  }
+
+  return { isOpen: false, statusText: "Closed" };
+};
+
 const BusinessDetail = () => {
   const { slug } = useParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Check if business is saved in localStorage
+  useEffect(() => {
+    if (business?.id) {
+      const savedBusinesses = JSON.parse(localStorage.getItem("savedBusinesses") || "[]");
+      setIsSaved(savedBusinesses.includes(business.id));
+    }
+  }, [business?.id]);
+
+  const handleNavigate = () => {
+    if (business?.latitude && business?.longitude) {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`,
+        "_blank"
+      );
+    } else if (business?.address) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address)}`,
+        "_blank"
+      );
+    } else {
+      toast.error("Location not available for this business");
+    }
+  };
+
+  const handleSave = () => {
+    if (!business?.id) return;
+
+    const savedBusinesses = JSON.parse(localStorage.getItem("savedBusinesses") || "[]");
+
+    if (isSaved) {
+      const updated = savedBusinesses.filter((id: string) => id !== business.id);
+      localStorage.setItem("savedBusinesses", JSON.stringify(updated));
+      setIsSaved(false);
+      toast.success("Removed from saved businesses");
+    } else {
+      savedBusinesses.push(business.id);
+      localStorage.setItem("savedBusinesses", JSON.stringify(savedBusinesses));
+      setIsSaved(true);
+      toast.success("Saved to your favorites");
+    }
+  };
 
   useEffect(() => {
     const fetchBusiness = async () => {
@@ -230,13 +316,19 @@ const BusinessDetail = () => {
                   </a>
                 </Button>
               )}
-              <Button className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2">
+              <Button
+                className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2"
+                onClick={handleNavigate}
+              >
                 <Navigation className="w-5 h-5" />
                 <span className="text-lg font-semibold">Navigate</span>
               </Button>
-              <Button className="bg-secondary text-white hover:bg-secondary-dark h-auto py-4 flex flex-col gap-2">
-                <Bookmark className="w-5 h-5" />
-                <span className="text-lg font-semibold">Save</span>
+              <Button
+                className={`h-auto py-4 flex flex-col gap-2 ${isSaved ? "bg-primary text-white hover:bg-primary/90" : "bg-secondary text-white hover:bg-secondary-dark"}`}
+                onClick={handleSave}
+              >
+                {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                <span className="text-lg font-semibold">{isSaved ? "Saved" : "Save"}</span>
               </Button>
             </div>
 
@@ -325,13 +417,22 @@ const BusinessDetail = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <div className="text-sm">
-                    <p className="font-semibold text-primary">Open Now</p>
-                    <p className="text-muted-foreground text-xs">Closes 10 PM</p>
-                  </div>
-                </div>
+                {(() => {
+                  const status = getBusinessStatus(business.operating_hours);
+                  return (
+                    <div className="flex items-center gap-3">
+                      <Clock className={`w-5 h-5 ${status.isOpen ? "text-primary" : "text-muted-foreground"}`} />
+                      <div className="text-sm">
+                        <p className={`font-semibold ${status.isOpen ? "text-primary" : "text-destructive"}`}>
+                          {status.statusText}
+                        </p>
+                        {status.closingTime && (
+                          <p className="text-muted-foreground text-xs">Closes {status.closingTime}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {business.amenities && business.amenities.length > 0 && (
                   <>

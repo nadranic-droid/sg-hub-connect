@@ -12,9 +12,8 @@ const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "sg_hub_u
 export const uploadToCloudinary = async (file: File, folder: string = "general"): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET); 
+  formData.append("upload_preset", UPLOAD_PRESET);
   formData.append("folder", folder);
-  // formData.append("api_key", "JdEhdhEqKjVLZHZcNN4Okr8VGXY"); // Usually not needed for unsigned uploads
 
   try {
     const response = await axios.post(
