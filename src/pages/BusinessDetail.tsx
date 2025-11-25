@@ -373,8 +373,38 @@ const BusinessDetail = () => {
               </TabsContent>
 
               <TabsContent value="menu" className="mt-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Menu information coming soon...</p>
+                <div className="text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <Globe className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="font-heading font-bold text-xl mb-2">Menu Not Available</h3>
+                    <p className="text-muted-foreground mb-4">
+                      This business hasn't added their menu yet.
+                    </p>
+                    {business.website ? (
+                      <Button asChild variant="outline">
+                        <a href={business.website} target="_blank" rel="noopener noreferrer">
+                          <Globe className="w-4 h-4 mr-2" />
+                          Visit Website for Menu
+                        </a>
+                      </Button>
+                    ) : business.phone ? (
+                      <Button asChild variant="outline">
+                        <a href={`tel:${business.phone}`}>
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call for Menu Info
+                        </a>
+                      </Button>
+                    ) : null}
+                    {!business.is_claimed && (
+                      <p className="text-sm text-muted-foreground mt-4">
+                        Are you the owner?{" "}
+                        <Link to={`/claim-business?business=${business.id}`} className="text-primary hover:underline">
+                          Claim this business
+                        </Link>{" "}
+                        to add your menu.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
 

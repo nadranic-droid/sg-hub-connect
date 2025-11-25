@@ -130,10 +130,33 @@ const BadgeRequests = () => {
 
       if (error) throw error;
 
-      // TODO: Send email with coupon code
-      // This would typically call an email service or Supabase Edge Function
-      
-      toast.success("Coupon code generated and request updated!");
+      // Open email client with pre-filled coupon email
+      const emailSubject = encodeURIComponent(`Your Humble Halal Featured Listing Coupon - ${code}`);
+      const emailBody = encodeURIComponent(
+`Hi ${selectedRequest.business_name},
+
+Thank you for displaying the Humble Halal badge on your website! We've verified your badge placement and are pleased to offer you a FREE 1-month featured listing.
+
+Your Coupon Code: ${code}
+
+To redeem your free featured listing:
+1. Log in to your account at https://humblehalal.sg
+2. Go to your Business Dashboard
+3. Click "Upgrade to Featured"
+4. Enter the coupon code at checkout
+
+This coupon is valid for 30 days and can only be used once.
+
+If you have any questions, please reply to this email.
+
+Best regards,
+The Humble Halal Team
+https://humblehalal.sg`
+      );
+
+      window.open(`mailto:${selectedRequest.email}?subject=${emailSubject}&body=${emailBody}`, "_blank");
+
+      toast.success("Coupon code generated! Email client opened with pre-filled message.");
       setSelectedRequest({ ...selectedRequest, coupon_code: code, status: "coupon_sent" });
       fetchRequests();
     } catch (error: any) {
